@@ -66,11 +66,11 @@
 @layer components {
   /* Dashboard Card Styles */
   .dashboard-card {
-    @apply bg-surface rounded-[--radius] border border-border p-6 shadow-[--shadow] transition-all duration-300;
+    @apply bg-surface rounded-dashboard border border-border p-6 shadow-dashboard transition-all duration-300;
   }
   
   .dashboard-card:hover {
-    @apply border-border-hover shadow-[--shadow-lg] transform -translate-y-1;
+    @apply border-border-hover shadow-dashboard-lg transform -translate-y-1;
   }
 
   /* Animated Counter */
@@ -84,7 +84,7 @@
   }
   
   .progress-fill {
-    @apply h-full rounded-full transition-all duration-700 ease-[--ease-in-out];
+    @apply h-full rounded-full transition-all duration-700 ease-out;
   }
 
   /* Table Styles */
@@ -93,7 +93,7 @@
   }
   
   .dashboard-table th {
-    @apply bg-surface-hover text-text-secondary font-medium text-sm py-3 px-4 border border-border first:rounded-tl-[--radius-sm] last:rounded-tr-[--radius-sm];
+    @apply bg-surface-hover text-text-secondary font-medium text-sm py-3 px-4 border border-border first:rounded-tl-dashboard-sm last:rounded-tr-dashboard-sm;
   }
   
   .dashboard-table td {
@@ -101,11 +101,11 @@
   }
   
   .dashboard-table tr:last-child td:first-child {
-    @apply rounded-bl-[--radius-sm];
+    @apply rounded-bl-dashboard-sm;
   }
   
   .dashboard-table tr:last-child td:last-child {
-    @apply rounded-br-[--radius-sm];
+    @apply rounded-br-dashboard-sm;
   }
 
   /* Navbar */
@@ -124,15 +124,15 @@
 
   /* Animations */
   .animate-fade-in {
-    animation: fadeIn 0.6s ease-[--ease-in-out] forwards;
+    animation: fadeIn 0.6s ease-out forwards;
   }
   
   .animate-slide-up {
-    animation: slideUp 0.6s ease-[--ease-in-out] forwards;
+    animation: slideUp 0.6s ease-out forwards;
   }
   
   .animate-counter {
-    animation: counter 1.5s ease-[--ease-in-out] forwards;
+    animation: counter 1.5s ease-out forwards;
   }
 }
 
