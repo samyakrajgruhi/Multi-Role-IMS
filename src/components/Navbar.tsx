@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Bell, LogOut, Menu } from 'lucide-react';
+import { LogOut, Menu } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { Link } from 'react-router-dom';
 
@@ -35,9 +35,9 @@ const Navbar = () => {
             <img 
               src="/SFA-updateLogo.png" 
               alt="SFA Logo" 
-              className="w-12 h-12 object-contain"
+              className="w-8 h-8 sm:w-12 sm:h-12 object-contain flex-shrink-0"
             />
-            <span className="text-xl font-bold text-text-primary">SFA</span>
+            <span className="text-lg sm:text-xl font-bold text-text-primary">SFA</span>
           </Link>
 
           {/* Navigation Items */}
@@ -79,25 +79,10 @@ const Navbar = () => {
                   <Link to="/payment" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium py-2 px-4 hover:bg-surface-hover rounded-dashboard">
                     Payment
                   </Link>
-                  <div className="border-t border-border pt-4 mt-4">
-                    <button className="w-full flex items-center space-x-2 text-text-secondary hover:text-primary hover:bg-surface-hover rounded-dashboard transition-all duration-200 py-2 px-4">
-                      <Bell className="w-5 h-5" />
-                      <span>Notifications</span>
-                    </button>
-                  </div>
                 </div>
               </SheetContent>
             </Sheet>
 
-            {/* Desktop Navigation - Hidden on mobile */}
-            <div className="hidden md:flex items-center space-x-4">
-              <button className="p-2 text-text-secondary hover:text-primary hover:bg-surface-hover rounded-dashboard transition-all duration-200 hover-scale">
-                <Bell className="w-5 h-5" />
-              </button>
-              <button className="p-2 text-text-secondary hover:text-primary hover:bg-surface-hover rounded-dashboard transition-all duration-200 hover-scale">
-                <Settings className="w-5 h-5" />
-              </button>
-            </div>
             
             {/* User Profile - Always visible */}
             <div className="flex items-center space-x-3 p-2 hover:bg-surface-hover rounded-dashboard transition-all duration-200 cursor-pointer hover-lift">

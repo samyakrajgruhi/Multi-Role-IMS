@@ -14,28 +14,16 @@ const UserInfo = () => {
     sfaId: 'SFA001',
     cmsId: 'CMS12345',
     lobby: 'ANVT',
-    department: 'Mechanical',
-    designation: 'Senior Technical Assistant',
+    role: 'Member',
     phone: '+91 98765 43210',
     email: 'rajesh.kumar@railways.gov.in',
-    address: 'Railway Colony, Block A, New Delhi - 110001',
-    emergencyContact: '+91 98765 43211',
-    contributionAmount: '25',
-    collectionMember: 'Priya Sharma - ANVT'
+    emergencyContact: '+91 98765 43211'
   });
 
   const [editedInfo, setEditedInfo] = useState({ ...userInfo });
 
   const lobbies = ['ANVT', 'DEE', 'DLI', 'GHH', 'JIND', 'KRJNDD', 'MTC', 'NZM', 'PNP', 'ROK', 'SSB'];
-  const contributionAmounts = ['25', '60'];
-  
-  const collectionMembers = [
-    'Priya Sharma - ANVT',
-    'Amit Singh - DEE', 
-    'Sunita Devi - DLI',
-    'Mohan Lal - GHH',
-    'Kavita Gupta - JIND'
-  ];
+  const roles = ['Admin', 'Collection Member', 'Member'];
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -77,7 +65,7 @@ const UserInfo = () => {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-text-primary">{userInfo.name}</h2>
-                  <p className="text-text-secondary">{userInfo.designation}</p>
+                  <p className="text-text-secondary">{userInfo.role}</p>
                 </div>
               </div>
               
@@ -89,11 +77,8 @@ const UserInfo = () => {
               )}
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Personal Information */}
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-text-primary mb-4">Personal Information</h3>
-                
+            <div className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="name" className="text-text-secondary">Full Name</Label>
                   {isEditing ? (
@@ -138,20 +123,6 @@ const UserInfo = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="address" className="text-text-secondary">Address</Label>
-                  {isEditing ? (
-                    <Input
-                      id="address"
-                      value={editedInfo.address}
-                      onChange={(e) => handleInputChange('address', e.target.value)}
-                      className="mt-1"
-                    />
-                  ) : (
-                    <p className="mt-1 p-2 bg-surface rounded-dashboard text-text-primary">{userInfo.address}</p>
-                  )}
-                </div>
-
-                <div>
                   <Label htmlFor="emergency" className="text-text-secondary">Emergency Contact</Label>
                   {isEditing ? (
                     <Input
@@ -164,12 +135,7 @@ const UserInfo = () => {
                     <p className="mt-1 p-2 bg-surface rounded-dashboard text-text-primary">{userInfo.emergencyContact}</p>
                   )}
                 </div>
-              </div>
 
-              {/* Professional & SFA Information */}
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-text-primary mb-4">Professional & SFA Details</h3>
-                
                 <div>
                   <Label className="text-text-secondary">SFA ID</Label>
                   <p className="mt-1 p-2 bg-primary-light text-primary rounded-dashboard font-medium">{userInfo.sfaId}</p>
@@ -181,43 +147,15 @@ const UserInfo = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="designation" className="text-text-secondary">Designation</Label>
-                  {isEditing ? (
-                    <Input
-                      id="designation"
-                      value={editedInfo.designation}
-                      onChange={(e) => handleInputChange('designation', e.target.value)}
-                      className="mt-1"
-                    />
-                  ) : (
-                    <p className="mt-1 p-2 bg-surface rounded-dashboard text-text-primary">{userInfo.designation}</p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="department" className="text-text-secondary">Department</Label>
-                  {isEditing ? (
-                    <Input
-                      id="department"
-                      value={editedInfo.department}
-                      onChange={(e) => handleInputChange('department', e.target.value)}
-                      className="mt-1"
-                    />
-                  ) : (
-                    <p className="mt-1 p-2 bg-surface rounded-dashboard text-text-primary">{userInfo.department}</p>
-                  )}
-                </div>
-
-                <div>
                   <Label htmlFor="lobby" className="text-text-secondary">Lobby</Label>
                   {isEditing ? (
                     <Select value={editedInfo.lobby} onValueChange={(value) => handleInputChange('lobby', value)}>
-                      <SelectTrigger className="mt-1">
+                      <SelectTrigger className="mt-1 bg-surface border border-border">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-surface border border-border z-50">
                         {lobbies.map((lobby) => (
-                          <SelectItem key={lobby} value={lobby}>{lobby}</SelectItem>
+                          <SelectItem key={lobby} value={lobby} className="hover:bg-surface-hover">{lobby}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -227,38 +165,20 @@ const UserInfo = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="contribution" className="text-text-secondary">Monthly Contribution</Label>
+                  <Label htmlFor="role" className="text-text-secondary">Role</Label>
                   {isEditing ? (
-                    <Select value={editedInfo.contributionAmount} onValueChange={(value) => handleInputChange('contributionAmount', value)}>
-                      <SelectTrigger className="mt-1">
+                    <Select value={editedInfo.role} onValueChange={(value) => handleInputChange('role', value)}>
+                      <SelectTrigger className="mt-1 bg-surface border border-border">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
-                        {contributionAmounts.map((amount) => (
-                          <SelectItem key={amount} value={amount}>₹{amount}</SelectItem>
+                      <SelectContent className="bg-surface border border-border z-50">
+                        {roles.map((role) => (
+                          <SelectItem key={role} value={role} className="hover:bg-surface-hover">{role}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="mt-1 p-2 bg-surface rounded-dashboard text-text-primary">₹{userInfo.contributionAmount}</p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="collector" className="text-text-secondary">Collection Member</Label>
-                  {isEditing ? (
-                    <Select value={editedInfo.collectionMember} onValueChange={(value) => handleInputChange('collectionMember', value)}>
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {collectionMembers.map((member) => (
-                          <SelectItem key={member} value={member}>{member}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <p className="mt-1 p-2 bg-surface rounded-dashboard text-text-primary">{userInfo.collectionMember}</p>
+                    <p className="mt-1 p-2 bg-surface rounded-dashboard text-text-primary">{userInfo.role}</p>
                   )}
                 </div>
               </div>
