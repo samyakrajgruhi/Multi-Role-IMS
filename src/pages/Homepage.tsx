@@ -168,27 +168,53 @@ const Homepage = () => {
         }
       />
 
-      {/* Section 5: Leadership Team */}
+      {/* Section 5: Founders */}
       <section className="py-16 px-6 bg-surface">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-text-primary mb-4">Our Leadership Team</h2>
+            <h2 className="text-4xl font-bold text-text-primary mb-4">Our Founders</h2>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              Meet the dedicated individuals who guide SFA's mission and ensure every member gets the support they need
+              The visionary leaders who established SFA to support our railway family
             </p>
           </div>
           
-          {/* Desktop: Horizontal layout, Mobile: 2x2 grid */}
-          <div className="hidden md:grid md:grid-cols-4 gap-6">
-            {leadershipTeam.map((leader, index) => (
-              <UserCard key={index} {...leader} />
+          {/* Desktop: Horizontal layout, Mobile: Grid */}
+          <div className="hidden md:grid md:grid-cols-3 gap-6 justify-center">
+            {founders.map((founder, index) => (
+              <UserCard key={index} {...founder} />
             ))}
           </div>
           
-          {/* Mobile: 2x2 grid */}
+          {/* Mobile: Grid */}
           <div className="grid grid-cols-2 gap-4 md:hidden">
-            {leadershipTeam.map((leader, index) => (
-              <UserCard key={index} {...leader} />
+            {founders.map((founder, index) => (
+              <UserCard key={index} {...founder} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Section 6: Co-Founders */}
+      <section className="py-16 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-text-primary mb-4">Our Co-Founders</h2>
+            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
+              The dedicated co-founders who helped build and grow our organization
+            </p>
+          </div>
+          
+          {/* Desktop: Horizontal layout, Mobile: Grid */}
+          <div className="hidden md:grid md:grid-cols-3 gap-6 justify-center">
+            {coFounders.map((coFounder, index) => (
+              <UserCard key={index} {...coFounder} />
+            ))}
+          </div>
+          
+          {/* Mobile: Grid */}
+          <div className="grid grid-cols-2 gap-4 md:hidden">
+            {coFounders.map((coFounder, index) => (
+              <UserCard key={index} {...coFounder} />
             ))}
           </div>
         </div>
