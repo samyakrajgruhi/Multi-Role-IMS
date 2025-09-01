@@ -33,32 +33,49 @@ const Homepage = () => {
     }
   ];
 
-  const leadershipTeam = [
+  const founders = [
     {
-      name: "Rajesh Kumar Gupta",
-      title: "Founder & President",
-      description: "With 25+ years in railway service, Rajesh founded SFA to create a support network for railway employees across all divisions.",
-      image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face&auto=format"
+      name: "Dambar Singh",
+      title: "Founder",
+      description: "",
+      image: "/Founders/MrDambarSingh.png"
     },
     {
-      name: "Mamta Singh",
-      title: "Co-Founder & Secretary",
-      description: "A dedicated advocate for employee welfare, Mamta manages operations and ensures transparent fund distribution.",
-      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face&auto=format"
+      name: "Kamlesh Kumar",
+      title: "Founder",
+      description: "",
+      image: "/Founders/MrKamleshKumar.png"
     },
     {
-      name: "Amit Verma",
-      title: "Treasurer",
-      description: "Financial expert with deep understanding of railway systems, ensuring every rupee is accounted for and properly utilized.",
-      image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&h=150&fit=crop&crop=face&auto=format"
-    },
-    {
-      name: "Dr. Sunita Joshi",
-      title: "Welfare Coordinator",
-      description: "Former railway medical officer who coordinates medical assistance and emergency support for members in need.",
-      image: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face&auto=format"
+      name: "Shahid Hussain",
+      title: "Founder",
+      description: "",
+      image: "/Founders/MrShahidHussain.png"
     }
   ];
+
+  const coFounders = [
+    {
+      name: "Jitender Kumar",
+      title: "Co-Founder",
+      description: "",
+      image: "/Co-Founders/MrJitenderKumar.png"
+    },
+    {
+      name: "Pramod Kumar", 
+      title: "Co-Founder",
+      description: "",
+      image: "/Co-Founders/MrPramodKumar.png"
+    },
+    {
+      name: "R K Meena",
+      title: "Co-Founder", 
+      description: "",
+      image: "/Co-Founders/MrRKMeena.png"
+    }
+  ];
+
+  const leadershipTeam = [...founders, ...coFounders];
 
   return (
     <div className="min-h-screen bg-background">
