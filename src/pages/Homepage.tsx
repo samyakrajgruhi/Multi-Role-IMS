@@ -96,6 +96,16 @@ const Homepage = () => {
             <p className="text-xl text-text-secondary mb-8 max-w-4xl mx-auto leading-relaxed">
               Empowering railway employees through financial solidarity and mutual support
             </p>
+            
+            {/* Call to Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+              <Button asChild size="lg" className="px-8 py-3">
+                <Link to="/login">Member Login</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="px-8 py-3">
+                <Link to="/lobby-data">View Lobby Data</Link>
+              </Button>
+            </div>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 mt-16">
@@ -237,6 +247,9 @@ const Homepage = () => {
           </div>
           
           <div className="flex flex-wrap justify-center gap-8 mb-8">
+            <Link to="/login" className="text-text-secondary hover:text-primary transition-colors">
+              Member Login
+            </Link>
             <Link to="/lobby-data" className="text-text-secondary hover:text-primary transition-colors">
               Lobby Data
             </Link>
