@@ -12,16 +12,16 @@ import {
 } from '@/components/ui/table';
 
 const LobbyData = () => {
-  const [selectedLobby, setSelectedLobby] = useState('');
+  const [selectedLobby, setSelectedLobby] = useState('All Lobbies');
 
-  const lobbies = ['ANVT', 'DEE', 'DLI', 'GHH', 'JIND', 'KRJNDD', 'MTC', 'NZM', 'PNP', 'ROK', 'SSB'];
+  const lobbies = ['All Lobbies', 'ANVT', 'DEE', 'DLI', 'GHH', 'JIND', 'KRJNDD', 'MTC', 'NZM', 'PNP', 'ROK', 'SSB'];
 
-  // Sample data - in real app this would come from backend based on selected lobby
-  const sampleData = [
+  // Sample data with multiple lobbies - in real app this would come from backend
+  const allLobbyData = [
     {
       srNo: 1,
       payDate: '2024-01-15',
-      lobby: selectedLobby || 'ANVT',
+      lobby: 'DLI',
       sfaId: 'SFA001',
       name: 'Rajesh Kumar',
       cmsId: 'CMS12345',
@@ -33,7 +33,7 @@ const LobbyData = () => {
     {
       srNo: 2,
       payDate: '2024-01-15',
-      lobby: selectedLobby || 'ANVT',
+      lobby: 'NZM',
       sfaId: 'SFA002',
       name: 'Sunita Devi',
       cmsId: 'CMS12346',
@@ -45,7 +45,7 @@ const LobbyData = () => {
     {
       srNo: 3,
       payDate: '2024-01-14',
-      lobby: selectedLobby || 'ANVT',
+      lobby: 'ANVT',
       sfaId: 'SFA003',
       name: 'Mohan Singh',
       cmsId: 'CMS12347',
@@ -57,7 +57,7 @@ const LobbyData = () => {
     {
       srNo: 4,
       payDate: '2024-01-14',
-      lobby: selectedLobby || 'ANVT',
+      lobby: 'DEE',
       sfaId: 'SFA004',
       name: 'Kavita Gupta',
       cmsId: 'CMS12348',
@@ -69,7 +69,7 @@ const LobbyData = () => {
     {
       srNo: 5,
       payDate: '2024-01-13',
-      lobby: selectedLobby || 'ANVT',
+      lobby: 'GHH',
       sfaId: 'SFA005',
       name: 'Suresh Yadav',
       cmsId: 'CMS12349',
@@ -77,8 +77,49 @@ const LobbyData = () => {
       amount: 25,
       paymentMode: 'Net Banking',
       remarks: ''
+    },
+    {
+      srNo: 6,
+      payDate: '2024-01-13',
+      lobby: 'JIND',
+      sfaId: 'SFA006',
+      name: 'Anjali Sharma',
+      cmsId: 'CMS12350',
+      receiver: 'Ravi Kumar',
+      amount: 100,
+      paymentMode: 'UPI',
+      remarks: 'Special contribution'
+    },
+    {
+      srNo: 7,
+      payDate: '2024-01-12',
+      lobby: 'MTC',
+      sfaId: 'SFA007',
+      name: 'Vikram Singh',
+      cmsId: 'CMS12351',
+      receiver: 'Neha Verma',
+      amount: 35,
+      paymentMode: 'Bank Transfer',
+      remarks: ''
+    },
+    {
+      srNo: 8,
+      payDate: '2024-01-12',
+      lobby: 'PNP',
+      sfaId: 'SFA008',
+      name: 'Meera Gupta',
+      cmsId: 'CMS12352',
+      receiver: 'Amit Verma',
+      amount: 50,
+      paymentMode: 'Cash',
+      remarks: 'Emergency fund'
     }
   ];
+
+  // Filter data based on selected lobby
+  const sampleData = selectedLobby === 'All Lobbies' 
+    ? allLobbyData 
+    : allLobbyData.filter(item => item.lobby === selectedLobby);
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,9 +142,9 @@ const LobbyData = () => {
                 <SelectTrigger className="w-full sm:w-64">
                   <SelectValue placeholder="Choose a lobby" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-surface border border-border z-50">
                   {lobbies.map((lobby) => (
-                    <SelectItem key={lobby} value={lobby}>
+                    <SelectItem key={lobby} value={lobby} className="hover:bg-surface-hover">
                       {lobby}
                     </SelectItem>
                   ))}
@@ -117,10 +158,12 @@ const LobbyData = () => {
             <Card className="p-0 overflow-hidden">
               <div className="p-6 bg-surface border-b border-border">
                 <h2 className="text-2xl font-bold text-text-primary">
-                  {selectedLobby} Lobby - Payment Records
+                  {selectedLobby === 'All Lobbies' ? 'All Lobbies' : selectedLobby + ' Lobby'} - Payment Records
                 </h2>
                 <p className="text-text-secondary mt-2">
-                  Recent payment transactions and member contributions
+                  {selectedLobby === 'All Lobbies' 
+                    ? 'Combined payment transactions from all lobbies' 
+                    : 'Recent payment transactions and member contributions'}
                 </p>
               </div>
               
@@ -192,17 +235,6 @@ const LobbyData = () => {
             </Card>
           )}
 
-          {!selectedLobby && (
-            <div className="text-center py-12">
-              <div className="w-24 h-24 mx-auto mb-6 bg-surface rounded-full flex items-center justify-center">
-                <svg className="w-12 h-12 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-text-primary mb-2">Select a Lobby</h3>
-              <p className="text-text-secondary">Choose a lobby from the dropdown above to view payment data</p>
-            </div>
-          )}
         </div>
       </main>
     </div>
