@@ -1,25 +1,11 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-}
+const AuthContext = createContext(undefined);
 
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => void;
-}
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-
-  const login = async (email: string, password: string) => {
+  const login = async (email, password) => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
@@ -31,7 +17,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (email, password, name) => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     

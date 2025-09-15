@@ -24,7 +24,7 @@ const RevenueCard = () => {
     return () => clearInterval(timer);
   }, [targetRevenue]);
 
-  const formatRevenue = (amount: number) => {
+  const formatRevenue = (amount) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
