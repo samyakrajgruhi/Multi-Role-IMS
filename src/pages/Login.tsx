@@ -4,6 +4,7 @@ import { Eye, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { auth,firestore } from "@/firebase";
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -22,9 +23,18 @@ const Login = () => {
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
 
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    try {
+      const userData = {
+        full_name: fullName,
+
+      }
+    }
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Submit logic placeholder
   };
 
   return (
