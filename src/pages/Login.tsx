@@ -18,6 +18,8 @@ const Login = () => {
   // Register form state
   const [fullName, setFullName] = useState("");
   const [regEmail, setRegEmail] = useState("");
+  const [lobbyId, setLobbyId] = useState("");
+  const [cmsId, setCmsId] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regConfirmPassword, setRegConfirmPassword] = useState("");
   const [showRegPassword, setShowRegPassword] = useState(false);
@@ -198,6 +200,36 @@ const Login = () => {
                   className="h-11"
                   value={regEmail}
                   onChange={e => setRegEmail(e.target.value)}
+                />
+              </div>
+
+              {/* Lobby ID Field */}
+              <div>
+                <label className="block text-sm font-medium mb-1" htmlFor="lobbyId">
+                  Lobby ID
+                </label>
+                <Input
+                  id="lobbyId"
+                  type="text"
+                  placeholder="Enter your lobby ID"
+                  className="h-11"
+                  value={lobbyId}
+                  onChange={e => setLobbyId(e.target.value)}
+                />
+              </div>
+
+              {/* CMS ID Field */}
+              <div>
+                <label className="block text-sm font-medium mb-1" htmlFor="cmsId">
+                  CMS ID
+                </label>
+                <Input
+                  id="cmsId"
+                  type="text"
+                  placeholder="Enter your CMS ID"
+                  className="h-11"
+                  value={cmsId}
+                  onChange={e => setCmsId(e.target.value)}
                 />
               </div>
 
