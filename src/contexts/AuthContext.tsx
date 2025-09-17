@@ -1,65 +1,105 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect } from "react";
+import { auth, firestore } from "@/firebase";
+import { 
+  User, 
+  onAuthStateChanged, 
+  signOut as firebaseSignOut ,
+} from "firebase/auth";
+import { doc, getDoc  } from "firebase/firestore";
+// import { getUserData } from "../firebase/userService";
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
+interface FirestoreUserData {
+  name?: string;
+  cms_id?: string;
+  lobby_id?: string;
+}
+
+const getUserData = async (userId: string): Promise<FirestoreUserData> => {
+  try {
+    // Example implementation using Firestore
+    const userDoc = await getDoc(doc(firestore, 'users', userId));
+    if (userDoc.exists()) {
+      return userDoc.data() as FirestoreUserData;
+    }
+    return {};
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+    return {};
+  }
+};
+
+
+interface UserData {
+  uid: string;
+  email: string | null;
+  name?: string;
+  cms_id?: string;
+  lobby_id?: string;
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: UserData | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => void;
+  isLoading: boolean;
+  logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  isAuthenticated: false,
+  isLoading: true,
+  logout: async () => {},
+});
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = async (email: string, password: string) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock user data
-    setUser({
-      id: '1',
-      email,
-      name: 'John Doe'
-    });
-  };
+  // In your AuthContext.tsx
+useEffect(() => {
+  setIsLoading(true);
+  const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    if (firebaseUser) {
+      try {
+        const userData = await getUserData(firebaseUser.uid);
+        setUser({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          ...userData
+        });
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    } else {
+      setUser(null);
+    }
+    setIsLoading(false);
+  });
 
-  const register = async (email: string, password: string, name: string) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock user creation - don't auto-login after registration
-    // User will need to login manually after successful registration
-  };
+  return () => unsubscribe();
+}, []);
 
-  const logout = () => {
-    setUser(null);
+  const logout = async () => {
+    try {
+      await firebaseSignOut(auth);
+      setUser(null);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      isAuthenticated: !!user,
-      login,
-      register,
-      logout
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);

@@ -10,6 +10,7 @@ import LobbyData from "./pages/LobbyData";
 import UserInfo from "./pages/UserInfo";
 import Payment from "./pages/Payment";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "@/components/ProtectRout.tsx";
 
 const queryClient = new QueryClient();
 
@@ -24,8 +25,13 @@ const App = () => (
             <Route path="/" element={<Homepage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/lobby-data" element={<LobbyData />} />
-            <Route path="/user-info" element={<UserInfo />} />
-            <Route path="/payment" element={<Payment />} />
+            
+            <Route element={<ProtectedRoute />}>
+              <Route path="/user-info" element={<UserInfo />} />
+              <Route path="/payment" element={<Payment />} />
+            </Route >
+
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

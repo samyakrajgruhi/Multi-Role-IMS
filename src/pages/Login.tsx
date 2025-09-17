@@ -1,17 +1,21 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { auth,firestore } from "@/firebase";
-import { setDoc,doc } from "firebase/firestore";
-import { Toast } from "@radix-ui/react-toast";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword} from "firebase/auth";
+import { setDoc,doc,getDoc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 
 
 const Login = () => {
+  const {toast} = useToast();
+
   const [isLogin, setIsLogin] = useState(true);
+  const navigate = useNavigate();
 
   // Login form state
   const [email, setEmail] = useState("");
@@ -40,32 +44,82 @@ const Login = () => {
     setShowRegConfirmPassword(false);
   }
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if(!isLogin){
       try {
+        if (!cmsId) {
+          toast({
+            title: "Error",
+            description: "CMS ID cannot be empty!",
+            variant: "destructive",
+          });
+          return;
+        }
+        // Check if CMS ID already exists
+        const existingDoc = await getDoc(doc(firestore, "users", cmsId));
+        if (existingDoc.exists()) {
+          toast({
+            title:"Error",
+            description: "CMS ID already exists!",
+            variant: "destructive"
+          });
+          console.error("CMS ID already exists!", { position: "top-center" });
+          return;
+        }
+
+        if(regPassword !== regConfirmPassword) {
+          toast({
+            title: "Error",
+            description: "Passwords do not match!",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        const userCredentials = await createUserWithEmailAndPassword(auth, regEmail, regPassword);
+        const user = userCredentials.user;
         const userData = {
           full_name: fullName,
           cms_id:cmsId,
           lobby_id:lobbyId,
           email:regEmail,
-          password: regPassword
+          uid:user.uid
         }
-
         await setDoc(doc(firestore,"users",cmsId),userData);
         clearFields();
+        toast({
+          title: "Success",
+          description: "User registered successfully!"
+        })
         console.log("User registered Successfully!!");
       }
       catch(e){
-        console.error("Failed",e)
+        toast({
+          title: "Registration Failed",
+          description: e.message || "Please try again with different information.",
+          variant: "destructive",
+        });
       }
       finally{
         setIsLogin(true);
+      }
+    }else{
+      try{
+        if(!email){
+          alert("Please Enter email.");
+          return;
+        }
+        await signInWithEmailAndPassword(auth,email,password);
+        console.log("Successfully logged in.");
+        navigate("/");
+
+      }catch(e){
+        toast({
+          title: "Registration Failed",
+          description: e.message || "Please try again with different information.",
+          variant: "destructive",
+        });
       }
     }
   };
