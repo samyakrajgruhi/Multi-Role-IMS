@@ -48,7 +48,7 @@ const Login = () => {
     setShowRegConfirmPassword(false);
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if(!isLogin){
       try {
@@ -83,12 +83,19 @@ const Login = () => {
         
         const userCredentials = await createUserWithEmailAndPassword(auth, regEmail, regPassword);
         const user = userCredentials.user;
+        // Generate SFA ID automatically
+        const sfaId = `SFA${String(Date.now()).slice(-6)}`;
+        
         const userData = {
           full_name: fullName,
-          cms_id:cmsId,
-          lobby_id:lobbyId,
-          email:regEmail,
-          uid:user.uid
+          cms_id: cmsId,
+          lobby_id: lobbyId,
+          sfa_id: sfaId,
+          email: regEmail,
+          uid: user.uid,
+          role: 'member', // default role
+          createdAt: new Date().toISOString(),
+          emailVerified: false
         }
         await setDoc(doc(firestore,"users",cmsId),userData);
         clearFields();

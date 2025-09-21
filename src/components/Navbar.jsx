@@ -1,14 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { LogOut, Menu, User } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
-import { Link } from 'react-router-dom';
-import { Button } from './ui/button';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Menu, X, User, LogOut, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
