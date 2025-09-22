@@ -5,21 +5,27 @@ import {
   onAuthStateChanged, 
   signOut as firebaseSignOut ,
 } from "firebase/auth";
-import { doc, getDoc  } from "firebase/firestore";
+import { doc, getDocs, collection, query, where  } from "firebase/firestore";
 // import { getUserData } from "../firebase/userService";
 
 interface FirestoreUserData {
-  name?: string;
+  full_name?: string;
   cms_id?: string;
   lobby_id?: string;
+  email?:string;
+  uid?:string;
+  phone?: string;
+  role?: string;
+  emergencyContact?: string;
+  sfaId?: string;
 }
 
 const getUserData = async (userId: string): Promise<FirestoreUserData> => {
   try {
-    // Example implementation using Firestore
-    const userDoc = await getDoc(doc(firestore, 'users', userId));
-    if (userDoc.exists()) {
-      return userDoc.data() as FirestoreUserData;
+    const userQuery = query(collection(firestore,'users'), where('uid','==',userId));
+    const userSnapshot = await getDocs(userQuery);
+    if (!userSnapshot.empty) {
+      return userSnapshot.docs[0].data() as FirestoreUserData;
     }
     return {};
   } catch (error) {
@@ -33,8 +39,12 @@ interface UserData {
   uid: string;
   email: string | null;
   name?: string;
-  cms_id?: string;
-  lobby_id?: string;
+  cmsId?: string;
+  lobby?: string;
+  phone?: string;
+  role?: string;
+  emergencyContact?: string;
+  sfaId?: string;
 }
 
 interface AuthContextType {
@@ -65,7 +75,13 @@ useEffect(() => {
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
-          ...userData
+          name: userData.full_name,
+          cmsId: userData.cms_id,
+          lobby: userData.lobby_id,
+          role: userData.role || 'Member', // Default to Member if not specified
+          sfaId: userData.sfaId || `SFA${userData.cms_id?.substring(3)}`, // Generate from CMS ID if not available
+          phone: userData.phone || '+91 98765 43210',
+          emergencyContact: userData.emergencyContact || '+91 98765 43211'
         });
       } catch (error) {
         console.error("Error fetching user data:", error);

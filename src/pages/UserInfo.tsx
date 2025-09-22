@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,21 +6,50 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Edit, Save, X, User } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const UserInfo = () => {
+  const { user} = useAuth();
+
   const [isEditing, setIsEditing] = useState(false);
+  
   const [userInfo, setUserInfo] = useState({
-    name: 'Rajesh Kumar Sharma',
-    sfaId: 'SFA001',
-    cmsId: 'CMS12345',
-    lobby: 'ANVT',
-    role: 'Member',
-    phone: '+91 98765 43210',
-    email: 'rajesh.kumar@railways.gov.in',
-    emergencyContact: '+91 98765 43211'
+    name: user?.name || 'User Name',
+    sfaId: user?.sfaId || 'SFA000',
+    cmsId: user?.cmsId || 'CMS00000',
+    lobby: user?.lobby || 'ANVT',
+    role: user?.role || 'Member',
+    phone: user?.phone || '+91 98765 43210',
+    email: user?.email || 'user@example.com',
+    emergencyContact: user?.emergencyContact || '+91 98765 43211'
   });
 
   const [editedInfo, setEditedInfo] = useState({ ...userInfo });
+
+  useEffect(() => {
+    if (user) {
+      setUserInfo({
+        name: user.name || 'User Name',
+        sfaId: user.sfaId || 'SFA000',
+        cmsId: user.cmsId || 'CMS00000',
+        lobby: user.lobby || 'ANVT',
+        role: user.role || 'Member',
+        phone: user.phone || '+91 98765 43210',
+        email: user.email || 'user@example.com',
+        emergencyContact: user.emergencyContact || '+91 98765 43211'
+      });
+      setEditedInfo({
+        name: user.name || 'User Name',
+        sfaId: user.sfaId || 'SFA000',
+        cmsId: user.cmsId || 'CMS00000',
+        lobby: user.lobby || 'ANVT',
+        role: user.role || 'Member',
+        phone: user.phone || '+91 98765 43210',
+        email: user.email || 'user@example.com',
+        emergencyContact: user.emergencyContact || '+91 98765 43211'
+      });
+    }
+  }, [user]);
 
   const lobbies = ['ANVT', 'DEE', 'DLI', 'GHH', 'JIND', 'KRJNDD', 'MTC', 'NZM', 'PNP', 'ROK', 'SSB'];
   const roles = ['Admin', 'Collection Member', 'Member'];
