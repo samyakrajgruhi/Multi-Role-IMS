@@ -4,8 +4,11 @@ import UserCard from '../components/UserCard';
 import Quote from '../components/Quote';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import {useAuth } from '@/contexts/AuthContext';
+
 
 const Homepage = () => {
+  const { isAuthenticated } = useAuth();
   const assistedMembers = [
     {
       name: "Ravi Kumar",
@@ -99,9 +102,11 @@ const Homepage = () => {
             
             {/* Call to Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <Button asChild size="lg" className="px-8 py-3">
-                <Link to="/login">Member Login</Link>
-              </Button>
+              {!isAuthenticated && (
+                <Button asChild size="lg" className="px-8 py-3">
+                  <Link to="/login">Member Login</Link>
+                </Button> 
+              )}
               <Button asChild variant="outline" size="lg" className="px-8 py-3">
                 <Link to="/lobby-data">View Lobby Data</Link>
               </Button>
