@@ -17,15 +17,19 @@ import loadLobbyData from '@/utils/loadLobbyData';
 const LobbyData = () => {
   const [selectedLobby, setSelectedLobby] = useState('All Lobbies');
   const [lobbyData, setLobbyData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const lobbies = ['All Lobbies', 'ANVT', 'DEE', 'DLI', 'GHH', 'JIND', 'KRJNDD', 'MTC', 'NZM', 'PNP', 'ROK', 'SSB'];
 
  useEffect(()=>{
   const fetchData = async () => {
+    setIsLoading(true);
     try{
       const data = await loadLobbyData(selectedLobby);
       setLobbyData(data);
     }catch(error){
       console.log("Error loading data:",error);
+    } finally {
+      setIsLoading(false);
     }
   };
   fetchData();
@@ -131,7 +135,14 @@ const LobbyData = () => {
           </Card>
 
           {/* Data Table */}
-          {selectedLobby && (
+          {isLoading ? (
+            <Card className="p-12 text-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <p className="text-lg text-text-secondary">Loading lobby data...</p>
+              </div>
+            </Card>
+          ) : selectedLobby && (
             <Card className="p-0 overflow-hidden">
               <div className="p-6 bg-surface border-b border-border">
                 <h2 className="text-2xl font-bold text-text-primary">

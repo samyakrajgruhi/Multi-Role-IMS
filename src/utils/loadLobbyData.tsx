@@ -1,5 +1,5 @@
 import {firestore} from '@/firebase';
-import {collection, doc, getDoc, getDocs, query, where} from 'firebase/firestore';
+import {collection, getDocs, query, where} from 'firebase/firestore';
 
 
 export default async function loadLobbyData(lobbyName: string = 'All Lobbies'){
@@ -9,13 +9,15 @@ export default async function loadLobbyData(lobbyName: string = 'All Lobbies'){
         lobby: string;
         sfaId: string;
         name?: string;
+        cmsId?: string;
         receiver: string;
         amount: number;
         paymentMode:string;
         remarks:string;
     }
     interface UserData {
-        name?: string;
+        full_name?: string;
+        cms_id?: string;
     }
     
 
@@ -36,10 +38,10 @@ export default async function loadLobbyData(lobbyName: string = 'All Lobbies'){
             const data = docSnapshot.data();
             let userData: UserData = {};
             if(data.sfaId){
-                const userDocRef = doc(firestore,'users',data.sfaId);
-                const userDocSnap = await getDoc(userDocRef);
-                if(userDocSnap.exists()){
-                    userData = userDocSnap.data() as UserData;
+                const userQuery = query(collection(firestore,'users'), where('sfaId','==',data.sfaId));
+                const userSnapshot = await getDocs(userQuery);
+                if(!userSnapshot.empty){
+                    userData = userSnapshot.docs[0].data() as UserData;
                 }
             }
             lobbyData.push({
@@ -47,7 +49,8 @@ export default async function loadLobbyData(lobbyName: string = 'All Lobbies'){
                 payDate: data.date,
                 lobby: data.lobby || lobbyName,
                 sfaId: data.sfaId,
-                name: userData.name || 'Unkown',
+                name: userData.full_name || 'Unknown',
+                cmsId: userData.cms_id || '-',
                 receiver: data.receiver,
                 amount: data.amount,
                 paymentMode: data.mode,
