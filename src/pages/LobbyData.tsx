@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,111 +12,25 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import loadLobbyData from '@/utils/loadLobbyData';
 
 const LobbyData = () => {
   const [selectedLobby, setSelectedLobby] = useState('All Lobbies');
-
+  const [lobbyData, setLobbyData] = useState([]);
   const lobbies = ['All Lobbies', 'ANVT', 'DEE', 'DLI', 'GHH', 'JIND', 'KRJNDD', 'MTC', 'NZM', 'PNP', 'ROK', 'SSB'];
 
-  // Sample data with multiple lobbies - in real app this would come from backend
-  const allLobbyData = [
-    {
-      srNo: 1,
-      payDate: '2024-01-15',
-      lobby: 'DLI',
-      sfaId: 'SFA001',
-      name: 'Rajesh Kumar',
-      cmsId: 'CMS12345',
-      receiver: 'Priya Sharma',
-      amount: 25,
-      paymentMode: 'UPI',
-      remarks: 'Monthly contribution'
-    },
-    {
-      srNo: 2,
-      payDate: '2024-01-15',
-      lobby: 'NZM',
-      sfaId: 'SFA002',
-      name: 'Sunita Devi',
-      cmsId: 'CMS12346',
-      receiver: 'Priya Sharma',
-      amount: 60,
-      paymentMode: 'Bank Transfer',
-      remarks: ''
-    },
-    {
-      srNo: 3,
-      payDate: '2024-01-14',
-      lobby: 'ANVT',
-      sfaId: 'SFA003',
-      name: 'Mohan Singh',
-      cmsId: 'CMS12347',
-      receiver: 'Amit Verma',
-      amount: 25,
-      paymentMode: 'Cash',
-      remarks: 'Late payment'
-    },
-    {
-      srNo: 4,
-      payDate: '2024-01-14',
-      lobby: 'DEE',
-      sfaId: 'SFA004',
-      name: 'Kavita Gupta',
-      cmsId: 'CMS12348',
-      receiver: 'Amit Verma',
-      amount: 60,
-      paymentMode: 'UPI',
-      remarks: 'Premium contribution'
-    },
-    {
-      srNo: 5,
-      payDate: '2024-01-13',
-      lobby: 'GHH',
-      sfaId: 'SFA005',
-      name: 'Suresh Yadav',
-      cmsId: 'CMS12349',
-      receiver: 'Neha Verma',
-      amount: 25,
-      paymentMode: 'Net Banking',
-      remarks: ''
-    },
-    {
-      srNo: 6,
-      payDate: '2024-01-13',
-      lobby: 'JIND',
-      sfaId: 'SFA006',
-      name: 'Anjali Sharma',
-      cmsId: 'CMS12350',
-      receiver: 'Ravi Kumar',
-      amount: 100,
-      paymentMode: 'UPI',
-      remarks: 'Special contribution'
-    },
-    {
-      srNo: 7,
-      payDate: '2024-01-12',
-      lobby: 'MTC',
-      sfaId: 'SFA007',
-      name: 'Vikram Singh',
-      cmsId: 'CMS12351',
-      receiver: 'Neha Verma',
-      amount: 35,
-      paymentMode: 'Bank Transfer',
-      remarks: ''
-    },
-    {
-      srNo: 8,
-      payDate: '2024-01-12',
-      lobby: 'PNP',
-      sfaId: 'SFA008',
-      name: 'Meera Gupta',
-      cmsId: 'CMS12352',
-      receiver: 'Amit Verma',
-      amount: 50,
-      paymentMode: 'Cash',
-      remarks: 'Emergency fund'
+ useEffect(()=>{
+  const fetchData = async () => {
+    try{
+      const data = await loadLobbyData(selectedLobby);
+      setLobbyData(data);
+    }catch(error){
+      console.log("Error loading data:",error);
     }
-  ];
+  };
+  fetchData();
+ }, [selectedLobby]);
+  
   const downloadCsv = () => {
     // Define the headers for the CSV
     const headers = [
@@ -135,7 +49,7 @@ const LobbyData = () => {
     // Convert the data to CSV format
     const csvContent = [
       headers.join(','), // Header row
-      ...sampleData.map(row => [
+      ...lobbyData.map(row => [
         row.srNo,
         row.payDate,
         row.lobby,
@@ -172,10 +86,6 @@ const LobbyData = () => {
   };
 
   // Filter data based on selected lobby
-  const sampleData = selectedLobby === 'All Lobbies' 
-    ? allLobbyData 
-    : allLobbyData.filter(item => item.lobby === selectedLobby);
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -251,7 +161,7 @@ const LobbyData = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sampleData.map((row) => (
+                    {lobbyData.map((row) => (
                       <TableRow key={row.srNo} className="hover:bg-surface-hover">
                         <TableCell className="font-medium">{row.srNo}</TableCell>
                         <TableCell>{row.payDate}</TableCell>
@@ -289,10 +199,10 @@ const LobbyData = () => {
               <div className="p-6 bg-surface border-t border-border">
                 <div className="flex flex-col sm:flex-row gap-4 text-sm text-text-secondary">
                   <div>
-                    <span className="font-semibold">Total Records:</span> {sampleData.length}
+                    <span className="font-semibold">Total Records:</span> {lobbyData.length}
                   </div>
                   <div>
-                    <span className="font-semibold">Total Amount:</span> ₹{sampleData.reduce((sum, row) => sum + row.amount, 0)}
+                    <span className="font-semibold">Total Amount:</span> ₹{lobbyData.reduce((sum, row) => sum + row.amount, 0)}
                   </div>
                   <div>
                     <span className="font-semibold">Last Updated:</span> {new Date().toLocaleDateString()}

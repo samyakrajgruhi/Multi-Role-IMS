@@ -1,4 +1,5 @@
 import { firestore } from '@/firebase';
+import { dataTagErrorSymbol } from '@tanstack/react-query';
 import { collection, writeBatch, doc } from 'firebase/firestore';
 
 interface PaymentRecord {
@@ -15,7 +16,7 @@ interface PaymentRecord {
 }
 
 // Helper function to extract month shortform from date
-const getMonthShortform = (dateString: string): string => {
+const getMonthAndYear = (dateString: string): {month: string, year:string} => {
   // Handle date format like "14-Sep-2025"
   const months: Record<string, string> = {
     'jan': 'jan',
@@ -34,20 +35,44 @@ const getMonthShortform = (dateString: string): string => {
 
   // Extract month from date string
   const parts = dateString.split('-');
-  if (parts.length >= 2) {
+  let month = '';
+  let year = '';
+
+  if (parts.length >= 3) {
     const monthPart = parts[1].toLowerCase();
+    year = parts[2];
     for (const [key, value] of Object.entries(months)) {
       if (monthPart.startsWith(key)) {
-        return value;
+        month =  value;
+        break;
       }
     }
   }
 
   // Default to current month if parsing fails
-  const currentDate = new Date();
-  const currentMonth = currentDate.getMonth();
-  const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sept', 'oct', 'nov', 'dec'];
-  return monthNames[currentMonth];
+  if(!month || !year){
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear().toString();
+    const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sept', 'oct', 'nov', 'dec'];
+    return {
+      month: month || monthNames[currentMonth],
+      year: year || currentYear
+    };
+  }
+
+  return {month, year};
+  
+};
+
+const getDateDigits = (dateString:string ) : string =>{
+  const parts = dateString.split('-');
+  if(parts.length >= 3){
+    const day = parts[0];
+    const year = parts[2];
+    return `${day}${year}`;
+  }
+  return '';
 };
 
 export const parseCSVData = (csvContent: string): PaymentRecord[] => {
@@ -94,9 +119,12 @@ export const importCSVToFirestore = async (
     let importedCount = 0;
     
     // Determine month from data (use first record's date)
-    const month = csvData.length > 0 ? getMonthShortform(csvData[0].payDate) : getMonthShortform('');
-    const collectionName = `transactions_${month}`;
-    
+    const { month, year } = csvData.length > 0 
+      ? getMonthAndYear(csvData[0].payDate) 
+      : getMonthAndYear('');
+      
+    const collectionName = `transactions_${month}_${year}`;
+
     console.log(`Importing to collection: ${collectionName}`);
     
     // Process in batches to avoid Firestore limits
@@ -105,21 +133,21 @@ export const importCSVToFirestore = async (
       const recordsSlice = csvData.slice(i, i + batchSize);
       
       recordsSlice.forEach(record => {
-        // Use just the SFA ID as the document ID
-        const docId = record.sfaId;
+        // Creating document ID in format : SfaId_dateDigits
+        const dateDigits = getDateDigits(record.payDate);
+        const docId = `${record.sfaId}_${dateDigits}`;
+
         const docRef = doc(collection(firestore, collectionName), docId);
+
         batch.set(docRef, {
-          payDate: record.payDate,
-          lobby: record.lobby,
           sfaId: record.sfaId,
-          name: record.name,
-          cmsId: record.cmsId,
-          receiver: record.receiver,
+          lobby: record.lobby,
           amount: record.amount,
-          paymentMode: record.paymentMode,
-          remarks: record.remarks || '',
+          date:record.payDate,
+          mode:record.paymentMode,
+          remarks:record.remarks || '',
+          receiver: record.receiver,
           createdAt: new Date(),
-          importedFrom: 'csv'
         });
       });
       
