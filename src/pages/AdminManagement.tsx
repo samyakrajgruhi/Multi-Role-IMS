@@ -18,7 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { firestore } from '@/firebase';
 import { collection, getDocs, updateDoc, doc, query, where } from 'firebase/firestore';
 import CSVImport from '@/components/admin/CSVImport';
-
+import MemberImport from '@/components/admin/MemberImport';
 
 interface MemberData {
   id: string;
@@ -308,6 +308,12 @@ const AdminManagement = () => {
           <div className="mt-8">
             <CSVImport />
           </div>
+
+          {/* Member Import Section */}
+          <div className="mt-8">
+            <MemberImport />
+          </div>
+
         </div>
       </main>
     </div>

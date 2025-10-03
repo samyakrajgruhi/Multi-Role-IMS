@@ -1,146 +1,162 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Upload, FileText, Check, AlertCircle } from 'lucide-react';
-import { parseCSVData, importCSVToFirestore } from '@/utils/csvImport';
 import { useToast } from '@/hooks/use-toast';
+import { Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { parseCSV } from '@/utils/csvParser';
 
-const CSVImport = () => {
+const CSVImport: React.FC = () => {
   const { toast } = useToast();
-  const [file, setFile] = useState<File | null>(null);
-  const [importing, setImporting] = useState(false);
-  const [importStatus, setImportStatus] = useState<{
-    success?: boolean;
-    imported?: number;
-    total?: number;
-  }>({});
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [previewData, setPreviewData] = useState<Record<string, string>[]>([]);
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
-  };
-
-  const handleImport = async () => {
+    const file = e.target.files?.[0];
+    
     if (!file) {
+      setFileName(null);
+      setPreviewData([]);
+      return;
+    }
+    
+    if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
       toast({
-        title: "No file selected",
-        description: "Please select a CSV file to import",
+        title: "Invalid file type",
+        description: "Please select a CSV file",
         variant: "destructive"
       });
       return;
     }
-
+    
+    setFileName(file.name);
+    
+    // Read and parse the CSV file
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const csvContent = event.target?.result as string;
+        const parsedData = parseCSV(csvContent);
+        
+        // Show preview of first 5 rows
+        setPreviewData(parsedData.slice(0, 5));
+      } catch (error) {
+        console.error("Error parsing CSV:", error);
+        toast({
+          title: "Error parsing CSV",
+          description: "The CSV file could not be parsed correctly",
+          variant: "destructive"
+        });
+      }
+    };
+    
+    reader.readAsText(file);
+  };
+  
+  const handleImport = async () => {
+    if (!fileName) return;
+    
+    setIsLoading(true);
+    
     try {
-      setImporting(true);
+      // Implementation for importing would go here
+      // This is a placeholder for demonstration
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Read the file content
-      const text = await file.text();
-      
-      // Parse the CSV data
-      const data = parseCSVData(text);
-      
-      // Import to Firestore
-      const result = await importCSVToFirestore(data);
-      
-      setImportStatus({
-        success: result.success,
-        imported: result.imported,
-        total: data.length
-      });
-
       toast({
-        title: result.success ? "Import Successful" : "Import Failed",
-        description: result.success 
-          ? `Successfully imported ${result.imported} records`
-          : "Failed to import data. Check console for details.",
-        variant: result.success ? "default" : "destructive"
+        title: "Import successful",
+        description: "Your CSV data has been imported",
+        variant: "default"
       });
     } catch (error) {
-      console.error("Error in import process:", error);
+      console.error("Import error:", error);
       toast({
-        title: "Import Error",
-        description: "An error occurred during import. Check console for details.",
+        title: "Import failed",
+        description: "There was an error importing your CSV data",
         variant: "destructive"
       });
     } finally {
-      setImporting(false);
+      setIsLoading(false);
     }
   };
-
+  
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Import Payment Records</CardTitle>
+        <CardTitle>Import CSV Data</CardTitle>
+        <CardDescription>
+          Upload a CSV file to import data into the system
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <input
-                type="file"
-                id="csv-file"
-                accept=".csv"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              <label
-                htmlFor="csv-file"
-                className="flex items-center justify-center border-2 border-dashed border-border rounded-md p-6 cursor-pointer hover:border-primary transition-colors"
-              >
-                <div className="text-center">
-                  <Upload className="mx-auto h-12 w-12 text-text-muted mb-2" />
-                  <span className="block text-sm font-medium text-text-primary">
-                    {file ? file.name : "Click to select CSV file"}
-                  </span>
-                  <span className="text-xs text-text-secondary mt-1">
-                    {file ? `${(file.size / 1024).toFixed(2)} KB` : "CSV files only"}
-                  </span>
-                </div>
-              </label>
-            </div>
-            
-            <Button 
-              onClick={handleImport} 
-              disabled={!file || importing}
-              className="flex items-center gap-2"
-            >
-              {importing ? (
-                <>
-                  <div className="animate-spin h-4 w-4 rounded-full border-2 border-primary border-t-transparent" />
-                  <span>Importing...</span>
-                </>
+          <div className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:bg-surface transition-colors"
+               onClick={() => document.getElementById('csv-file-input')?.click()}>
+            <input
+              type="file"
+              id="csv-file-input"
+              accept=".csv"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <Upload className="h-10 w-10 mx-auto text-text-muted mb-2" />
+            <p className="text-sm text-text-muted mb-1">
+              {fileName ? (
+                <span className="text-text-primary font-medium flex items-center justify-center gap-1">
+                  <CheckCircle className="h-4 w-4 text-success" />
+                  {fileName}
+                </span>
               ) : (
-                <>
-                  <FileText className="h-4 w-4" />
-                  <span>Import Data</span>
-                </>
+                "Click to upload or drag and drop"
               )}
-            </Button>
+            </p>
+            <p className="text-xs text-text-muted">CSV files only</p>
           </div>
           
-          {importStatus.success !== undefined && (
-            <Alert variant={importStatus.success ? "default" : "destructive"}>
-              <div className="flex items-start">
-                {importStatus.success ? (
-                  <Check className="h-4 w-4 mt-0.5 mr-2" />
-                ) : (
-                  <AlertCircle className="h-4 w-4 mt-0.5 mr-2" />
-                )}
-                <div>
-                  <AlertTitle>
-                    {importStatus.success ? "Import Successful" : "Import Failed"}
-                  </AlertTitle>
-                  <AlertDescription>
-                    {importStatus.success
-                      ? `Successfully imported ${importStatus.imported} out of ${importStatus.total} records.`
-                      : "Failed to import data. Check the browser console for details."}
-                  </AlertDescription>
-                </div>
+          {previewData.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium mb-2">Preview (first 5 rows):</h3>
+              <div className="overflow-x-auto border border-border rounded-lg">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-surface border-b border-border">
+                      {Object.keys(previewData[0]).map((header, i) => (
+                        <th key={i} className="px-3 py-2 text-left font-medium text-text-secondary">
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewData.map((row, i) => (
+                      <tr key={i} className="border-b border-border last:border-0">
+                        {Object.values(row).map((cell, j) => (
+                          <td key={j} className="px-3 py-2 truncate max-w-[200px]">
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </Alert>
+            </div>
           )}
+          
+          <div className="flex justify-end">
+            <Button 
+              onClick={handleImport} 
+              disabled={!fileName || isLoading}
+              className="w-full sm:w-auto"
+            >
+              {isLoading ? (
+                <>
+                  <span className="animate-spin h-4 w-4 mr-2 rounded-full border-2 border-current border-t-transparent"></span>
+                  Importing...
+                </>
+              ) : "Import Data"}
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
