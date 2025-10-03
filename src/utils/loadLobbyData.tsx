@@ -38,7 +38,7 @@ export default async function loadLobbyData(lobbyName: string = 'All Lobbies'){
             const data = docSnapshot.data();
             let userData: UserData = {};
             if(data.sfaId){
-                const userQuery = query(collection(firestore,'users'), where('sfaId','==',data.sfaId));
+                const userQuery = query(collection(firestore,'users'), where('sfa_id','==',data.sfaId));
                 const userSnapshot = await getDocs(userQuery);
                 if(!userSnapshot.empty){
                     userData = userSnapshot.docs[0].data() as UserData;
