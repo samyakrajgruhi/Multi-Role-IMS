@@ -7,7 +7,6 @@ import { firestore } from '@/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
-// Interface for collection member data
 interface CollectionMember {
   id: string;
   name: string;
@@ -23,13 +22,12 @@ const Payment = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const amounts = [25, 60];
-
-  // Fetch collection members from Firestore
+  
+  // Fetch collection members
   useEffect(() => {
     const fetchCollectionMembers = async () => {
       setIsLoading(true);
       try {
-        // Query users with role "collection"
         const usersRef = collection(firestore, 'users');
         const q = query(usersRef, where('role', '==', 'collection member'));
         const querySnapshot = await getDocs(q);
@@ -63,12 +61,10 @@ const Payment = () => {
 
   const handleProceedToPay = () => {
     if (selectedCollector && selectedAmount) {
-      // Redirect to payment gateway
       alert('Redirecting to payment gateway...');
     }
   };
 
-  // Get the selected member object
   const selectedMember = collectionMembers.find(m => m.id === selectedCollector);
 
   return (

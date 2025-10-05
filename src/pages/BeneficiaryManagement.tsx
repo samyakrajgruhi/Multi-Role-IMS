@@ -61,7 +61,7 @@ export default function BeneficiaryManagement() {
       
       if (!userSnapshot.empty) {
         const userData = userSnapshot.docs[0].data();
-        if (userData.role !== 'Admin') {
+        if (userData.role !== 'admin') {
           toast({
             title: "Access Denied",
             description: "You don't have permission to access this page",
