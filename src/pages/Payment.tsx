@@ -1,28 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { firestore } from '@/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+
+// Interface for collection member data
+interface CollectionMember {
+  id: string;
+  name: string;
+  lobby: string;
+  sfaId: string;
+}
 
 const Payment = () => {
+  const { toast } = useToast();
   const [selectedCollector, setSelectedCollector] = useState('');
   const [selectedAmount, setSelectedAmount] = useState('');
-
-  const collectionMembers = [
-    'Rajesh Kumar - ANVT',
-    'Priya Sharma - DEE', 
-    'Amit Singh - DLI',
-    'Sunita Devi - GHH',
-    'Mohan Lal - JIND',
-    'Kavita Gupta - KRJNDD',
-    'Suresh Yadav - MTC',
-    'Neha Verma - NZM',
-    'Rakesh Jain - PNP',
-    'Meera Patel - ROK',
-    'Vijay Kumar - SSB'
-  ];
+  const [collectionMembers, setCollectionMembers] = useState<CollectionMember[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const amounts = [25, 60];
+
+  // Fetch collection members from Firestore
+  useEffect(() => {
+    const fetchCollectionMembers = async () => {
+      setIsLoading(true);
+      try {
+        // Query users with role "collection"
+        const usersRef = collection(firestore, 'users');
+        const q = query(usersRef, where('role', '==', 'collection member'));
+        const querySnapshot = await getDocs(q);
+        
+        const members: CollectionMember[] = [];
+        querySnapshot.forEach(doc => {
+          const data = doc.data();
+          members.push({
+            id: doc.id,
+            name: data.full_name || 'Unknown',
+            lobby: data.lobby_id || 'Unknown',
+            sfaId: data.sfa_id || '',
+          });
+        });
+        
+        setCollectionMembers(members);
+      } catch (error) {
+        console.error("Error fetching collection members:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load collection members. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCollectionMembers();
+  }, [toast]);
 
   const handleProceedToPay = () => {
     if (selectedCollector && selectedAmount) {
@@ -30,6 +67,9 @@ const Payment = () => {
       alert('Redirecting to payment gateway...');
     }
   };
+
+  // Get the selected member object
+  const selectedMember = collectionMembers.find(m => m.id === selectedCollector);
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,16 +89,26 @@ const Payment = () => {
                 <label className="text-lg font-semibold text-text-primary">
                   Collection Member
                 </label>
-                <Select value={selectedCollector} onValueChange={setSelectedCollector}>
+                <Select 
+                  value={selectedCollector} 
+                  onValueChange={setSelectedCollector} 
+                  disabled={isLoading}
+                >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select collection member" />
+                    <SelectValue placeholder={isLoading ? "Loading collection members..." : "Select collection member"} />
                   </SelectTrigger>
                   <SelectContent>
                     {collectionMembers.map((member) => (
-                      <SelectItem key={member} value={member}>
-                        {member}
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.name} - {member.lobby} {member.sfaId ? `(${member.sfaId})` : ''}
                       </SelectItem>
                     ))}
+                    
+                    {collectionMembers.length === 0 && !isLoading && (
+                      <div className="p-2 text-center text-text-muted">
+                        No collection members found
+                      </div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -89,22 +139,30 @@ const Payment = () => {
               <div className="pt-8">
                 <Button 
                   onClick={handleProceedToPay}
-                  disabled={!selectedCollector || !selectedAmount}
+                  disabled={!selectedCollector || !selectedAmount || isLoading}
                   className="w-full py-4 text-lg font-semibold"
                   size="lg"
                 >
-                  Proceed to Pay ₹{selectedAmount || '0'}
+                  {isLoading ? 'Loading...' : `Proceed to Pay ₹${selectedAmount || '0'}`}
                 </Button>
               </div>
 
               {/* Payment Info */}
-              {selectedCollector && selectedAmount && (
+              {selectedCollector && selectedAmount && selectedMember && (
                 <div className="mt-8 p-6 bg-surface rounded-dashboard border border-border">
                   <h3 className="text-lg font-semibold text-text-primary mb-4">Payment Summary</h3>
                   <div className="space-y-2 text-text-secondary">
                     <div className="flex justify-between">
                       <span>Paying to:</span>
-                      <span className="text-text-primary font-medium">{selectedCollector}</span>
+                      <span className="text-text-primary font-medium">
+                        {selectedMember?.name || "Unknown"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Lobby:</span>
+                      <span className="text-text-primary font-medium">
+                        {selectedMember?.lobby || "Unknown"}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Amount:</span>
