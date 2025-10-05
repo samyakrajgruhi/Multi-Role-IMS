@@ -159,7 +159,7 @@ export default function BeneficiaryManagement() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Beneficiary Request Management</h1>
           <p className="text-muted-foreground">Review and manage assistance requests from members</p>
