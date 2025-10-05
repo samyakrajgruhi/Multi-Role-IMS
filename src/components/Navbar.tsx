@@ -56,25 +56,14 @@ const Navbar = () => {
                 <Link to="/user-info" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium">
                   User Info
                 </Link>
-                {user?.role === 'Admin' && (
-                  <>
-                    <Link 
-                      to="/admin" 
-                      className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium"
-                    >
-                      Admin Panel
-                    </Link>
-                    <Link 
-                      to="/beneficiary-management" 
-                      className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium"
-                    >
-                      Beneficiary Requests
-                    </Link>
-                  </>
+                {user?.role === 'admin' && (
+                  <Link 
+                    to="/admin" 
+                    className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium"
+                  >
+                    Admin Panel
+                  </Link>
                 )}
-                <Link to="/beneficiary-request" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium">
-                  Request Assistance
-                </Link>
                 <Link to="/payment" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium">
                   Payment
                 </Link>
@@ -110,25 +99,6 @@ const Navbar = () => {
                     <>
                       <Link to="/user-info" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium py-2 px-4 hover:bg-surface-hover rounded-dashboard">
                         User Info
-                      </Link>
-                      {user?.role === 'Admin' && (
-                        <>
-                          <Link 
-                            to="/admin" 
-                            className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium py-2 px-4 hover:bg-surface-hover rounded-dashboard"
-                          >
-                            Admin Panel
-                          </Link>
-                          <Link 
-                            to="/beneficiary-management" 
-                            className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium py-2 px-4 hover:bg-surface-hover rounded-dashboard"
-                          >
-                            Beneficiary Requests
-                          </Link>
-                        </>
-                      )}
-                      <Link to="/beneficiary-request" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium py-2 px-4 hover:bg-surface-hover rounded-dashboard">
-                        Request Assistance
                       </Link>
                       <Link to="/payment" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium py-2 px-4 hover:bg-surface-hover rounded-dashboard">
                         Payment

@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { auth,firestore } from "@/firebase";
 import { 
   createUserWithEmailAndPassword, 
@@ -46,8 +45,7 @@ const Login = () => {
   // Password Reset functionality
   const [resetEmail, setResetEmail] = useState("");
   const [showResetForm, setShowResetForm] = useState(false);
-  const lobbies = ['ANVT', 'DEE', 'DLI', 'GHH', 'JIND', 'KRJNDD', 'MTC', 'NZM', 'PNP', 'ROK', 'SSB'];
-  
+
   function clearFields(){
     setFullName("");
     setRegEmail("");
@@ -325,18 +323,14 @@ const Login = () => {
                 <label className="block text-sm font-medium mb-1" htmlFor="lobbyId">
                   Lobby ID
                 </label>
-                <Select value={lobbyId} onValueChange={setLobbyId}>
-                  <SelectTrigger id="lobbyId" className="h-11 w-full">
-                    <SelectValue placeholder="Select your lobby" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-surface border border-border z-50">
-                    {lobbies.map((lobby) => (
-                      <SelectItem key={lobby} value={lobby} className="hover:bg-surface-hover">
-                        {lobby}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="lobbyId"
+                  type="text"
+                  placeholder="Enter your lobby ID"
+                  className="h-11"
+                  value={lobbyId}
+                  onChange={e => setLobbyId(e.target.value.toUpperCase())}
+                />
               </div>
 
               {/* CMS ID Field */}
