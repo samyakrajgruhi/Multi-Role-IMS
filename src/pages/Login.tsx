@@ -5,7 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { auth,firestore } from "@/firebase";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail} from "firebase/auth";
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  sendPasswordResetEmail,
+  setPersistence,
+  browserSessionPersistence
+} from "firebase/auth";
 import { setDoc,doc,getDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
@@ -131,6 +137,7 @@ const Login = () => {
           alert("Please Enter email.");
           return;
         }
+        await setPersistence(auth, browserSessionPersistence);
         await signInWithEmailAndPassword(auth,email,password);
         console.log("Successfully logged in.");
         navigate("/");
