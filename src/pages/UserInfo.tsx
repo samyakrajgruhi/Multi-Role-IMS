@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Edit, Save, X, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import PaymentHistory, {PaymentRecord} from '@/components/PaymentHistory';
 import {doc,updateDoc, collection ,query, where, getDocs} from 'firebase/firestore';
 import {firestore} from '@/firebase';
 import {useToast} from '@/hooks/use-toast';
@@ -309,9 +308,6 @@ const UserInfo = () => {
               </div>
             )}
           </Card>
-          <div className="mt-8">
-            <PaymentHistory payments={paymentHistory as PaymentRecord[]} />
-          </div>
         </div>
       </main>
     </div>
