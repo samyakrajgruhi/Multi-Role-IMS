@@ -2,7 +2,7 @@ import {firestore} from '@/firebase';
 import {collection, getDocs, query, where} from 'firebase/firestore';
 
 
-export default async function loadLobbyData(lobbyName: string = 'All Lobbies'){
+export default async function loadLobbyData(lobbyName: string = 'All Lobbies', month?: number, year?: number){
     interface LobbyDataItem {
         srNo?: number;
         payDate?: string;
@@ -22,14 +22,29 @@ export default async function loadLobbyData(lobbyName: string = 'All Lobbies'){
     
 
     try{
-        const collectionRef = collection(firestore,'transactions_sept_2025');
+        const collectionRef = collection(firestore,'transactions');
+
+        // Build query with filters
+        const constraints = [];
+        
+        if (month !== undefined) {
+            constraints.push(where('month', '==', month));
+        }
+        
+        if (year !== undefined) {
+            constraints.push(where('year', '==', year));
+        }
+        
+        if (lobbyName !== 'All Lobbies') {
+            constraints.push(where('lobby', '==', lobbyName));
+        }
 
         let querySnapshot;
-        if( lobbyName === 'All Lobbies'){
-            querySnapshot = await getDocs(collectionRef);
-        }else {
-            const q = query(collectionRef, where('lobby','==',lobbyName));
+        if (constraints.length > 0) {
+            const q = query(collectionRef, ...constraints);
             querySnapshot = await getDocs(q);
+        } else {
+            querySnapshot = await getDocs(collectionRef);
         }
         let srNo = 0;
         const lobbyData: LobbyDataItem[] = [];
@@ -46,7 +61,7 @@ export default async function loadLobbyData(lobbyName: string = 'All Lobbies'){
             }
             lobbyData.push({
                 srNo: srNo,
-                payDate: data.date,
+                payDate: data.dateString || data.date,
                 lobby: data.lobby || lobbyName,
                 sfaId: data.sfaId,
                 name: userData.full_name || 'Unknown',

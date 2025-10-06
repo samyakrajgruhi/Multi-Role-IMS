@@ -16,17 +16,25 @@ import {
 import loadLobbyData from '@/utils/loadLobbyData';
 
 const LobbyData = () => {
+  const currentDate = new Date();
   const [selectedLobby, setSelectedLobby] = useState('All Lobbies');
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
   const [lobbyData, setLobbyData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const lobbies = ['All Lobbies', 'ANVT', 'DEE', 'DLI', 'GHH', 'JIND', 'KRJNDD', 'MTC', 'NZM', 'PNP', 'ROK', 'SSB'];
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  const years = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - i);
 
  useEffect(()=>{
   const fetchData = async () => {
     setIsLoading(true);
     try{
-      const data = await loadLobbyData(selectedLobby);
+      const data = await loadLobbyData(selectedLobby, selectedMonth, selectedYear);
       setLobbyData(data);
     }catch(error){
       console.log("Error loading data:",error);
@@ -35,7 +43,7 @@ const LobbyData = () => {
     }
   };
   fetchData();
- }, [selectedLobby]);
+ }, [selectedLobby, selectedMonth, selectedYear]);
   
   const downloadCsv = () => {
     // Define the headers for the CSV
@@ -78,7 +86,8 @@ const LobbyData = () => {
     // Create a temporary link element
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `${selectedLobby.replace(' ', '_')}_Payments_${new Date().toISOString().split('T')[0]}.csv`);
+    const fileName = `${selectedLobby.replace(' ', '_')}_${months[selectedMonth]}_${selectedYear}_Payments.csv`;
+    link.setAttribute('download', fileName);
     
     // Append the link to the body
     document.body.appendChild(link);
@@ -116,23 +125,61 @@ const LobbyData = () => {
           {/* Lobby Selection and Search */}
           <Card className="p-6 mb-8">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div className="flex flex-col sm:flex-row gap-4 items-center w-full sm:w-auto">
-                  <label className="text-lg font-semibold text-text-primary whitespace-nowrap">
-                    Select Lobby:
-                  </label>
-                  <Select value={selectedLobby} onValueChange={setSelectedLobby}>
-                    <SelectTrigger className="w-full sm:w-64">
-                      <SelectValue placeholder="Choose a lobby" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-surface border border-border z-50">
-                      {lobbies.map((lobby) => (
-                        <SelectItem key={lobby} value={lobby} className="hover:bg-surface-hover">
-                          {lobby}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <div className="flex flex-col sm:flex-row gap-4 items-start justify-between">
+                <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center w-full lg:w-auto">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center w-full sm:w-auto">
+                    <label className="text-lg font-semibold text-text-primary whitespace-nowrap">
+                      Select Lobby:
+                    </label>
+                    <Select value={selectedLobby} onValueChange={setSelectedLobby}>
+                      <SelectTrigger className="w-full sm:w-48">
+                        <SelectValue placeholder="Choose a lobby" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-surface border border-border z-50">
+                        {lobbies.map((lobby) => (
+                          <SelectItem key={lobby} value={lobby} className="hover:bg-surface-hover">
+                            {lobby}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center w-full sm:w-auto">
+                    <label className="text-lg font-semibold text-text-primary whitespace-nowrap">
+                      Month:
+                    </label>
+                    <Select value={selectedMonth.toString()} onValueChange={(val) => setSelectedMonth(parseInt(val))}>
+                      <SelectTrigger className="w-full sm:w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-surface border border-border z-50">
+                        {months.map((month, index) => (
+                          <SelectItem key={index} value={index.toString()} className="hover:bg-surface-hover">
+                            {month}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center w-full sm:w-auto">
+                    <label className="text-lg font-semibold text-text-primary whitespace-nowrap">
+                      Year:
+                    </label>
+                    <Select value={selectedYear.toString()} onValueChange={(val) => setSelectedYear(parseInt(val))}>
+                      <SelectTrigger className="w-full sm:w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-surface border border-border z-50">
+                        {years.map((year) => (
+                          <SelectItem key={year} value={year.toString()} className="hover:bg-surface-hover">
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 
                 <Button 
@@ -195,7 +242,13 @@ const LobbyData = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredData.length === 0 ? (
+                    {lobbyData.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={10} className="text-center py-8 text-text-secondary">
+                          No records available for {months[selectedMonth]} {selectedYear}
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredData.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={10} className="text-center py-8 text-text-secondary">
                           No records found matching your search

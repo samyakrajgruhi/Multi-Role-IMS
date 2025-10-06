@@ -15,54 +15,50 @@ interface PaymentRecord {
   remarks?: string;
 }
 
-// Helper function to extract month shortform from date
-const getMonthAndYear = (dateString: string): {month: string, year:string} => {
+// Helper function to parse date and extract month/year
+const parseDateString = (dateString: string): { date: Date; month: number; year: number } => {
   // Handle date format like "14-Sep-2025"
-  const months: Record<string, string> = {
-    'jan': 'jan',
-    'feb': 'feb',
-    'mar': 'mar',
-    'apr': 'apr',
-    'may': 'may',
-    'jun': 'jun',
-    'jul': 'jul',
-    'aug': 'aug',
-    'sep': 'sept',
-    'oct': 'oct',
-    'nov': 'nov',
-    'dec': 'dec'
+  const monthMap: Record<string, number> = {
+    'jan': 0, 'january': 0,
+    'feb': 1, 'february': 1,
+    'mar': 2, 'march': 2,
+    'apr': 3, 'april': 3,
+    'may': 4,
+    'jun': 5, 'june': 5,
+    'jul': 6, 'july': 6,
+    'aug': 7, 'august': 7,
+    'sep': 8, 'sept': 8, 'september': 8,
+    'oct': 9, 'october': 9,
+    'nov': 10, 'november': 10,
+    'dec': 11, 'december': 11
   };
 
-  // Extract month from date string
   const parts = dateString.split('-');
-  let month = '';
-  let year = '';
+  const currentDate = new Date();
 
   if (parts.length >= 3) {
+    const day = parseInt(parts[0]);
     const monthPart = parts[1].toLowerCase();
-    year = parts[2];
-    for (const [key, value] of Object.entries(months)) {
+    const year = parseInt(parts[2]);
+    
+    let month = currentDate.getMonth();
+    for (const [key, value] of Object.entries(monthMap)) {
       if (monthPart.startsWith(key)) {
-        month =  value;
+        month = value;
         break;
       }
     }
+    
+    const date = new Date(year, month, day);
+    return { date, month, year };
   }
 
-  // Default to current month if parsing fails
-  if(!month || !year){
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear().toString();
-    const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sept', 'oct', 'nov', 'dec'];
-    return {
-      month: month || monthNames[currentMonth],
-      year: year || currentYear
-    };
-  }
-
-  return {month, year};
-  
+  // Default to current date if parsing fails
+  return {
+    date: currentDate,
+    month: currentDate.getMonth(),
+    year: currentDate.getFullYear()
+  };
 };
 
 const getDateDigits = (dateString:string ) : string =>{
@@ -118,12 +114,7 @@ export const importCSVToFirestore = async (
     const totalRecords = csvData.length;
     let importedCount = 0;
     
-    // Determine month from data (use first record's date)
-    const { month, year } = csvData.length > 0 
-      ? getMonthAndYear(csvData[0].payDate) 
-      : getMonthAndYear('');
-      
-    const collectionName = `transactions_${month}_${year}`;
+    const collectionName = 'transactions';
 
     console.log(`Importing to collection: ${collectionName}`);
     
@@ -133,6 +124,9 @@ export const importCSVToFirestore = async (
       const recordsSlice = csvData.slice(i, i + batchSize);
       
       recordsSlice.forEach(record => {
+        // Parse the date to get month, year, and Date object
+        const { date, month, year } = parseDateString(record.payDate);
+        
         // Creating document ID in format : SfaId_dateDigits
         const dateDigits = getDateDigits(record.payDate);
         const docId = `${record.sfaId}_${dateDigits}`;
@@ -143,9 +137,12 @@ export const importCSVToFirestore = async (
           sfaId: record.sfaId,
           lobby: record.lobby,
           amount: record.amount,
-          date:record.payDate,
-          mode:record.paymentMode,
-          remarks:record.remarks || '',
+          date: date, // JavaScript Date object
+          dateString: record.payDate, // Original string for display
+          month: month, // 0-11
+          year: year, // Full year number
+          mode: record.paymentMode,
+          remarks: record.remarks || '',
           receiver: record.receiver,
           createdAt: new Date(),
         });
