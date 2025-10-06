@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button'; // Add this import
-import { Download } from 'lucide-react'; // Add this import
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Download, Search } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -18,6 +19,7 @@ const LobbyData = () => {
   const [selectedLobby, setSelectedLobby] = useState('All Lobbies');
   const [lobbyData, setLobbyData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const lobbies = ['All Lobbies', 'ANVT', 'DEE', 'DLI', 'GHH', 'JIND', 'KRJNDD', 'MTC', 'NZM', 'PNP', 'ROK', 'SSB'];
 
  useEffect(()=>{
@@ -89,7 +91,17 @@ const LobbyData = () => {
     URL.revokeObjectURL(url);
   };
 
-  // Filter data based on selected lobby
+  // Filter data based on selected lobby and search term
+  const filteredData = lobbyData.filter((row) => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      row.name?.toLowerCase().includes(searchLower) ||
+      row.sfaId?.toLowerCase().includes(searchLower) ||
+      row.cmsId?.toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -101,36 +113,47 @@ const LobbyData = () => {
             <p className="text-lg text-text-secondary">View payment records and member contributions by lobby</p>
           </div>
 
-          {/* Lobby Selection */}
+          {/* Lobby Selection and Search */}
           <Card className="p-6 mb-8">
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-              <div className="flex flex-col sm:flex-row gap-4 items-center">
-                <label className="text-lg font-semibold text-text-primary whitespace-nowrap">
-                  Select Lobby:
-                </label>
-                <Select value={selectedLobby} onValueChange={setSelectedLobby}>
-                  <SelectTrigger className="w-full sm:w-64">
-                    <SelectValue placeholder="Choose a lobby" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-surface border border-border z-50">
-                    {lobbies.map((lobby) => (
-                      <SelectItem key={lobby} value={lobby} className="hover:bg-surface-hover">
-                        {lobby}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <div className="flex flex-col sm:flex-row gap-4 items-center w-full sm:w-auto">
+                  <label className="text-lg font-semibold text-text-primary whitespace-nowrap">
+                    Select Lobby:
+                  </label>
+                  <Select value={selectedLobby} onValueChange={setSelectedLobby}>
+                    <SelectTrigger className="w-full sm:w-64">
+                      <SelectValue placeholder="Choose a lobby" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-surface border border-border z-50">
+                      {lobbies.map((lobby) => (
+                        <SelectItem key={lobby} value={lobby} className="hover:bg-surface-hover">
+                          {lobby}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <Button 
+                  onClick={downloadCsv}
+                  variant="outline" 
+                  className="flex items-center gap-2 w-full sm:w-auto"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download CSV</span>
+                </Button>
               </div>
-              
-              {/* Add Download CSV Button */}
-              <Button 
-                onClick={downloadCsv}
-                variant="outline" 
-                className="flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download CSV</span>
-              </Button>
+
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+                <Input
+                  className="pl-10 bg-surface"
+                  placeholder="Search by name, SFA ID, or CMS ID"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
           </Card>
 
@@ -172,7 +195,13 @@ const LobbyData = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {lobbyData.map((row) => (
+                    {filteredData.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={10} className="text-center py-8 text-text-secondary">
+                          No records found matching your search
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredData.map((row) => (
                       <TableRow key={row.srNo} className="hover:bg-surface-hover">
                         <TableCell className="font-medium">{row.srNo}</TableCell>
                         <TableCell>{row.payDate}</TableCell>
@@ -210,10 +239,10 @@ const LobbyData = () => {
               <div className="p-6 bg-surface border-t border-border">
                 <div className="flex flex-col sm:flex-row gap-4 text-sm text-text-secondary">
                   <div>
-                    <span className="font-semibold">Total Records:</span> {lobbyData.length}
+                    <span className="font-semibold">Total Records:</span> {filteredData.length} {searchTerm && `of ${lobbyData.length}`}
                   </div>
                   <div>
-                    <span className="font-semibold">Total Amount:</span> ₹{lobbyData.reduce((sum, row) => sum + row.amount, 0)}
+                    <span className="font-semibold">Total Amount:</span> ₹{filteredData.reduce((sum, row) => sum + row.amount, 0)}
                   </div>
                   <div>
                     <span className="font-semibold">Last Updated:</span> {new Date().toLocaleDateString()}

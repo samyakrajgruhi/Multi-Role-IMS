@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,7 @@ import {
   Select, SelectContent, SelectItem, 
   SelectTrigger, SelectValue 
 } from '@/components/ui/select';
-import { Search, Shield, ShieldCheck, ShieldAlert, AlertCircle } from 'lucide-react';
+import { Search, Shield, ShieldCheck, ShieldAlert, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { firestore } from '@/firebase';
@@ -36,9 +36,10 @@ const PROTECTED_ADMINS = [
   "SFA1001", // Example SFA IDs of protected users   
 ];
 
-const AdminManagement = () => {
+const MemberList = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [members, setMembers] = useState<MemberData[]>([]);
@@ -138,9 +139,11 @@ const AdminManagement = () => {
 
   // Filter members based on search term and role filter
   const filteredMembers = members.filter(member => {
+    const searchLower = searchTerm.toLowerCase();
     const matchesSearch = 
-      member.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      member.sfaId.toLowerCase().includes(searchTerm.toLowerCase());
+      member.name.toLowerCase().includes(searchLower) || 
+      member.sfaId.toLowerCase().includes(searchLower) ||
+      member.cmsId.toLowerCase().includes(searchLower);
     
     if (roleFilter === 'all') return matchesSearch;
     if (roleFilter === 'admin') return matchesSearch && member.role === 'admin';
@@ -170,8 +173,17 @@ const AdminManagement = () => {
       
       <main className="pt-20">
         <div className="max-w-7xl mx-auto px-6 py-12">
+          <Button 
+            variant="ghost" 
+            className="mb-6"
+            onClick={() => navigate('/admin')}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Admin Menu
+          </Button>
+
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-text-primary mb-4">Admin Management</h1>
+            <h1 className="text-4xl font-bold text-text-primary mb-4">Member List</h1>
             <p className="text-lg text-text-secondary">Manage member roles and permissions</p>
           </div>
 
@@ -181,7 +193,7 @@ const AdminManagement = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
                 <Input
                   className="pl-10 bg-surface"
-                  placeholder="Search by name or SFA ID"
+                  placeholder="Search by name, SFA ID, or CMS ID"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -320,4 +332,4 @@ const AdminManagement = () => {
   );
 };
 
-export default AdminManagement;
+export default MemberList;

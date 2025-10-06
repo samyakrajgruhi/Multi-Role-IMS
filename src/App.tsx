@@ -15,7 +15,10 @@ const UserInfo = lazy(() => import("./pages/UserInfo"));
 const Payment = lazy(() => import("./pages/Payment"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
-const AdminManagement = lazy(() => import("./pages/AdminManagement"));
+const AdminMenu = lazy(() => import("./pages/AdminMenu"));
+const MemberList = lazy(() => import("./pages/MemberList"));
+const PaymentAmounts = lazy(() => import("./pages/PaymentAmounts"));
+const MakeCollectionMember = lazy(() => import("./pages/MakeCollectionMember"));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -43,7 +46,10 @@ const App = () => (
               <Route element={<ProtectedRoute />}>
                 <Route path="/user-info" element={<UserInfo />} />
                 <Route path="/payment" element={<Payment />} />
-                <Route path="/admin" element={<AdminManagement />} />
+                <Route path="/admin" element={<AdminMenu />} />
+                <Route path="/admin/members" element={<MemberList />} />
+                <Route path="/admin/payment-amounts" element={<PaymentAmounts />} />
+                <Route path="/admin/collection-members" element={<MakeCollectionMember />} />
               </Route>
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
