@@ -56,7 +56,7 @@ const Navbar = () => {
                 <Link to="/user-info" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium">
                   User Info
                 </Link>
-                {user?.role === 'admin' && (
+                {isAuthenticated && user?.isAdmin && (
                   <Link 
                     to="/admin" 
                     className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium"
@@ -110,7 +110,7 @@ const Navbar = () => {
                     </Link>
                   )}
 
-                  {isAuthenticated && user?.role === 'admin' && (
+                  {isAuthenticated && user?.isAdmin && (
                     <Link 
                       to="/admin" 
                       className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium"

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -17,7 +18,7 @@ const MakeCollectionMember = () => {
   const [sfaId, setSfaId] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [memberInfo, setMemberInfo] = useState<any>(null);
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.isAdmin;
 
   const handleSearch = async () => {
     if (!sfaId.trim()) {
@@ -53,7 +54,8 @@ const MakeCollectionMember = () => {
         sfa_id: data.sfa_id,
         cms_id: data.cms_id,
         lobby_id: data.lobby_id,
-        role: data.role || 'member'
+        role: data.role || 'member',
+        isCollectionMember: data.isCollectionMember || data.role === "collection"
       };
       setMemberInfo(memberData);
 
@@ -87,7 +89,7 @@ const MakeCollectionMember = () => {
       if (!querySnapshot.empty) {
         const memberDoc = querySnapshot.docs[0];
         await updateDoc(memberDoc.ref, {
-          role: 'collection'
+          isCollectionMember: true
         });
 
         toast({

@@ -25,8 +25,10 @@ interface MemberData {
   sfaId: string;
   lobby: string;
   role: string;
-  email: string;
   isProtected?: boolean;
+  isAdmin?: boolean;
+  isCollectionMember: boolean;
+  email: string;
 }
 
 // List of users that should always remain admins (founders, key members, etc.)
@@ -70,7 +72,9 @@ const MemberList = () => {
             lobby: data.lobby_id || 'N/A',
             role: data.role || 'member',
             email: data.email || 'N/A',
-            isProtected: isProtectedAdmin
+            isProtected: isProtectedAdmin,
+            isAdmin: data.isAdmin || data.role == 'admin',
+            isCollectionMember: data.isCollectionMember || data.role == 'collection'
           };
         });
         
@@ -92,49 +96,46 @@ const MemberList = () => {
     }
   }, [isAuthenticated, isAdmin, toast]);
 
-  // Handle role change
-  const handleRoleChange = async (memberId: string, currentRole: string, isProtected: boolean) => {
-    // If member is protected and we're trying to demote them, show error
-    if (isProtected && currentRole === 'admin') {
+  // Handle Admin Toggle
+  const handleAdminToggle = async (memberId: string, isCurrentlyAdmin: boolean, isProtected: boolean) =>{
+    if(isProtected && isCurrentlyAdmin) {
       toast({
         title: "Protected Admin",
-        description: "This user is a protected admin and cannot be demoted.",
+        description: "This user is a protected admin and cannot be demoted",
         variant: "destructive"
       });
       return;
     }
 
-    try {
+    try{
       setProcessing(memberId);
-      
-      const newRole = currentRole === 'admin' ? 'member' : 'admin';
+
       const userDocRef = doc(firestore, 'users', memberId);
-      
+
       await updateDoc(userDocRef, {
-        role: newRole
+        isAdmin: !isCurrentlyAdmin
       });
-      
-      // Update local state
+
       setMembers(members.map(member => 
-        member.id === memberId ? {...member, role: newRole} : member
+        member.id === memberId? {...member, isAdmin: !isCurrentlyAdmin} : member
       ));
-      
+
       toast({
         title: "Success",
-        description: `User has been ${newRole === 'admin' ? 'promoted to' : 'removed from'} admin role.`
+        description: `User has been ${!isCurrentlyAdmin ? 'given' : 'removed from'} admin privileges.`
       });
-    } catch (error) {
-      console.error("Error updating user role:", error);
+    }catch(error){
+      console.error("Error updating admin status:",error);
       toast({
         title: "Error",
-        description: "Failed to update user role. Please try again.",
+        description: "Failed to update admin status. Please try again.",
         variant: "destructive"
       });
-    } finally {
+    }finally{
       setProcessing(null);
     }
-  };
-
+  }
+  
   // Filter members based on search term and role filter
   const filteredMembers = members.filter(member => {
     const searchLower = searchTerm.toLowerCase();
@@ -145,7 +146,6 @@ const MemberList = () => {
     
     if (roleFilter === 'all') return matchesSearch;
     if (roleFilter === 'admin') return matchesSearch && member.role === 'admin';
-    if (roleFilter === 'collection') return matchesSearch && member.role === 'collection';
     if (roleFilter === 'member') return matchesSearch && member.role === 'member';
     
     return matchesSearch;
@@ -204,7 +204,6 @@ const MemberList = () => {
                 <SelectContent className="bg-surface border border-border z-50">
                   <SelectItem value="all">All Members</SelectItem>
                   <SelectItem value="admin">Admins</SelectItem>
-                  <SelectItem value="collection">Collection Members</SelectItem>
                   <SelectItem value="member">Regular Members</SelectItem>
                 </SelectContent>
               </Select>
@@ -261,18 +260,20 @@ const MemberList = () => {
                           <TableCell className="font-mono">{member.cmsId}</TableCell>
                           <TableCell>{member.lobby}</TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-2">
-                              {member.role === 'admin' ? (
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {member.isAdmin && (
                                 <span className="flex items-center gap-1 px-2 py-1 bg-warning-light text-warning rounded-dashboard-sm text-xs font-medium">
                                   <ShieldAlert size={14} />
                                   Admin
                                 </span>
-                              ) : member.role === 'collection' ? (
+                              )}
+                              {member.isCollectionMember && (
                                 <span className="flex items-center gap-1 px-2 py-1 bg-accent-light text-accent rounded-dashboard-sm text-xs font-medium">
                                   <ShieldCheck size={14} />
                                   Collection
                                 </span>
-                              ) : (
+                              )}
+                              {!member.isAdmin && !member.isCollectionMember && (
                                 <span className="flex items-center gap-1 px-2 py-1 bg-surface text-text-secondary rounded-dashboard-sm text-xs font-medium">
                                   <Shield size={14} />
                                   Member
@@ -281,29 +282,27 @@ const MemberList = () => {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Button
-                              variant={member.role === 'admin' ? "destructive" : "default"}
-                              size="sm"
-                              onClick={() => handleRoleChange(member.id, member.role, !!member.isProtected)}
-                              disabled={
-                                processing === member.id || 
-                                member.id === user?.uid || 
-                                (member.role === 'admin' && member.isProtected)
-                              }
-                              className="flex items-center gap-2"
-                            >
-                              {processing === member.id ? (
-                                <span className="animate-spin h-4 w-4 rounded-full border-2 border-current border-t-transparent"></span>
-                              ) : member.id === user?.uid ? (
-                                "Current User"
-                              ) : member.role === 'admin' && member.isProtected ? (
-                                "Protected Admin"
-                              ) : member.role === 'admin' ? (
-                                "Remove Admin"
-                              ) : (
-                                "Make Admin"
-                              )}
-                            </Button>
+                            <div className="flex gap-2 flex-wrap">
+                              <Button
+                                variant={member.isAdmin ? "destructive" : "default"}
+                                size="sm"
+                                onClick={() => handleAdminToggle(member.id, member.isAdmin, !!member.isProtected)}
+                                disabled={
+                                  processing === member.id || 
+                                  member.id === user?.uid || 
+                                  (member.isAdmin && member.isProtected)
+                                }
+                                className="flex items-center gap-2"
+                              >
+                                {processing === member.id ? (
+                                  <span className="animate-spin h-4 w-4 rounded-full border-2 border-current border-t-transparent"></span>
+                                ) : member.isAdmin ? (
+                                  "Remove Admin"
+                                ) : (
+                                  "Make Admin"
+                                )}
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
