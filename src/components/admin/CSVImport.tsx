@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { firestore } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
 
@@ -18,7 +19,7 @@ export const parseDateString = (dateString: string) => {
     'feb': 1, 'february': 1,
     'mar': 2, 'march': 2,
     'apr': 3, 'april': 3,
-    'may': 4, 'may': 4,
+    'may': 4,
     'jun': 5, 'june': 5,
     'jul': 6, 'july': 6,
     'aug': 7, 'august': 7,

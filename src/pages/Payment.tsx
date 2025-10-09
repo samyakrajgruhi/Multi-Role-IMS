@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { firestore } from '@/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 // Interface for collection member data
@@ -20,11 +20,39 @@ const Payment = () => {
   const [selectedCollector, setSelectedCollector] = useState('');
   const [selectedAmount, setSelectedAmount] = useState('');
   const [collectionMembers, setCollectionMembers] = useState<CollectionMember[]>([]);
+  const [amounts, setAmounts] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingAmounts, setIsLoadingAmounts] = useState(true);
 
-  const amounts = [25, 60];
+  useEffect(()=>{
+    const fetchPaymentAmounts = async () =>{
+      try{
+        setIsLoadingAmounts(true);
+        const configDoc = await getDoc(doc(firestore, 'config', 'payment_amounts'));
 
-  // Fetch collection members from Firestore
+        if(configDoc.exists()){
+          const data = configDoc.data();
+          setAmounts(data.amounts || [25,60,500]);
+        }else {
+          setAmounts([25,60,500]);
+        }
+      }catch(error){
+        console.error("Error fetching payment amounts :",error);
+        setAmounts([23,60,500]);
+        toast({
+          title: "Warning",
+          description: "Could not load payment amounts. Using default values.",
+          variant: "destructive"
+        });
+      }finally{
+        setIsLoadingAmounts(false);
+      }
+    }
+
+    fetchPaymentAmounts();
+  },[toast]);
+
+  // Fetch collection members 
   useEffect(() => {
     const fetchCollectionMembers = async () => {
       setIsLoading(true);
