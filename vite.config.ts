@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    allowedHosts: ["bjwrtx-ip-122-161-68-239.tunnelmole.net"]
+    allowedHosts: ["a0nwc5-ip-122-161-67-50.tunnelmole.net"]
   },
   plugins: [
     react(),

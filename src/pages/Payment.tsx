@@ -32,13 +32,13 @@ const Payment = () => {
 
         if(configDoc.exists()){
           const data = configDoc.data();
-          setAmounts(data.amounts || [25,60,500]);
+          setAmounts(data.amounts || [25,500]);
         }else {
-          setAmounts([25,60,500]);
+          setAmounts([25,500]);
         }
       }catch(error){
         console.error("Error fetching payment amounts :",error);
-        setAmounts([23,60,500]);
+        setAmounts([25,500]);
         toast({
           title: "Warning",
           description: "Could not load payment amounts. Using default values.",
@@ -140,7 +140,6 @@ const Payment = () => {
                   </SelectContent>
                 </Select>
               </div>
-
               {/* Amount Selection */}
               <div className="space-y-4">
                 <label className="text-lg font-semibold text-text-primary">
