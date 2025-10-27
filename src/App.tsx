@@ -25,6 +25,7 @@ const LobbiesManagement = lazy(() => import("./pages/LobbiesManagement"));
 const DeleteUser = lazy(() => import("./pages/DeleteUser"));
 const BeneficiaryRequest = lazy(() => import("./pages/BeneficiaryRequest"));
 const BeneficiaryReview = lazy(() => import("./pages/BeneficiaryReview"));
+const Announcements = lazy(() => import("./pages/Announcements"));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -62,6 +63,7 @@ const App = () => (
                 <Route path="/admin/cleanup" element={<DatabaseCleanup />} />
                 <Route path="/admin/delete-user" element={<DeleteUser />} />
                 <Route path="/admin/beneficiary-review" element={<BeneficiaryReview />} />
+                <Route path="/announcements" element={<Announcements />} />
               </Route>
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

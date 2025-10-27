@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { NotificationDropdown } from './NotificationDropdown';
 
 const Navbar = () => {
   const [isVisible, setIsVisible] = useState(true);
@@ -57,12 +58,20 @@ const Navbar = () => {
                   User Info
                 </Link>
                 {isAuthenticated && user?.isAdmin && (
-                  <Link 
-                    to="/admin" 
-                    className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium"
-                  >
-                    Admin Panel
-                  </Link>
+                  <>
+                    <Link 
+                      to="/admin" 
+                      className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium"
+                    >
+                      Admin Panel
+                    </Link>
+                    <Link 
+                      to="/announcements" 
+                      className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium"
+                    >
+                      Announcements
+                    </Link>
+                  </>
                 )}
                 <Link to="/payment" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium">
                   Payment
@@ -80,6 +89,8 @@ const Navbar = () => {
 
           {/* Right Side */}
           <div className="flex items-center space-x-2">
+            {/* Notification Bell - visible to all authenticated users */}
+            {isAuthenticated && <NotificationDropdown />}
             {/* Mobile Menu */}
             <Sheet>
               <SheetTrigger asChild>
@@ -111,12 +122,20 @@ const Navbar = () => {
                   )}
 
                   {isAuthenticated && user?.isAdmin && (
-                    <Link 
-                      to="/admin" 
-                      className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium"
-                    >
-                      Admin Panel
-                    </Link>
+                    <>
+                      <Link 
+                        to="/admin" 
+                        className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium py-2 px-4 hover:bg-surface-hover rounded-dashboard"
+                      >
+                        Admin Panel
+                      </Link>
+                      <Link 
+                        to="/announcements" 
+                        className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium py-2 px-4 hover:bg-surface-hover rounded-dashboard"
+                      >
+                        Announcements
+                      </Link>
+                    </>
                   )}
                 </div>
               </SheetContent>
