@@ -57,6 +57,9 @@ const Navbar = () => {
                 <Link to="/user-info" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium">
                   User Info
                 </Link>
+                <Link to="/announcements" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium">
+                  Announcements
+                </Link>
                 {isAuthenticated && user?.isAdmin && (
                   <>
                     <Link 

@@ -49,7 +49,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/lobby-data" element={<LobbyData />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
-              
+              <Route path="/announcements" element={<Announcements />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="/user-info" element={<UserInfo />} />
                 <Route path="/payment" element={<Payment />} />
@@ -63,7 +63,6 @@ const App = () => (
                 <Route path="/admin/cleanup" element={<DatabaseCleanup />} />
                 <Route path="/admin/delete-user" element={<DeleteUser />} />
                 <Route path="/admin/beneficiary-review" element={<BeneficiaryReview />} />
-                <Route path="/announcements" element={<Announcements />} />
               </Route>
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

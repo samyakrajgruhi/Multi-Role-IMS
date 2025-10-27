@@ -72,8 +72,8 @@ const Announcements = () => {
     );
   }
 
-  if (!isAuthenticated || !user?.isAdmin) {
-    return <Navigate to="/" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -133,23 +133,25 @@ const Announcements = () => {
           <div>
             <h1 className="text-3xl font-bold text-text-primary flex items-center gap-3">
               <Megaphone className="w-8 h-8 text-primary" />
-              Announcements Management
+              Announcements
             </h1>
             <p className="text-text-secondary mt-2">
-              Create and manage announcements for all users
+              {user?.isAdmin ? 'Create and manage announcements for all users' : 'Stay updated with the latest announcements'}
             </p>
           </div>
           
-          <Button 
-            onClick={() => setShowForm(!showForm)}
-            className="gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            New Announcement
-          </Button>
+          {user?.isAdmin && (
+            <Button 
+              onClick={() => setShowForm(!showForm)}
+              className="gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              New Announcement
+            </Button>
+          )}
         </div>
 
-        {showForm && (
+        {showForm && user?.isAdmin && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>Create New Announcement</CardTitle>
@@ -224,28 +226,29 @@ const Announcements = () => {
                         Created by {announcement.createdBy} on {formatDate(announcement.createdAt)}
                       </CardDescription>
                     </div>
-                    
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-warning hover:text-warning hover:bg-warning-light">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Announcement</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete this announcement? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(announcement.id)}>
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    {user?.isAdmin && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="text-warning hover:text-warning hover:bg-warning-light">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Announcement</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this announcement? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(announcement.id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent>
