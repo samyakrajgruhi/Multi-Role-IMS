@@ -29,3 +29,5 @@ test.html
 .env.local
 
 
+src/pages/TempAdmin.tsx
+execution-plan.md
