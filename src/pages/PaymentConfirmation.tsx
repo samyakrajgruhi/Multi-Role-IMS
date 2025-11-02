@@ -139,6 +139,8 @@ const PaymentConfirmation = () => {
 
     
             await setDoc(transactionsRef, {
+                // transaction id
+                transaction_id: docId,
                 // User info
                 sfaId: user?.sfaId,
                 userId: user?.uid,
@@ -161,7 +163,6 @@ const PaymentConfirmation = () => {
                 dateString: formattedDateString,
                 month: monthNum, 
                 year: year,
-                status: 'pending',
                 createdAt: new Date(),
                 remarks: 'Payment via app'
             });

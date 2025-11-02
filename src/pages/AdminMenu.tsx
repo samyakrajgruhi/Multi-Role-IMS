@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, DollarSign, UserPlus, Shield, FileUp, Building, UserX, Heart } from 'lucide-react';
+import { Users, DollarSign, UserPlus, Shield, FileUp, Building, UserX, Heart, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { requireAdmin } from '@/hooks/useAdminCheck';
 
@@ -69,6 +69,13 @@ const AdminMenu = () => {
       description: 'Remove user accounts from the system (preserves transaction data)',
       icon: UserX,
       path: '/admin/delete-user',
+      color: 'text-destructive'
+    },
+    {
+      title: 'Delete Transaction',
+      description: 'Remove Transaction entries from the system',
+      icon: Trash2,
+      path: '/admin/delete-transaction',
       color: 'text-destructive'
     }
   ];

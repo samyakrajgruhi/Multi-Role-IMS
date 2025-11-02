@@ -29,6 +29,7 @@ const Announcements = lazy(() => import("./pages/Announcements"));
 const TempAdmin  = lazy(() => import("./pages/TempAdmin"));
 const PaymentConfirmation = lazy(() => import("./pages/PaymentConfirmation"));
 const MyPayments = lazy(() => import("./pages/MyPayments"))
+const DeleteTransaction = lazy(() => import("./pages/DeleteTransaction"));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -96,6 +97,7 @@ const App = () => (
                   <Route path="/admin/csv-import" element={<CSVImportPage />} />
                   <Route path="/admin/cleanup" element={<DatabaseCleanup />} />
                   <Route path="/admin/delete-user" element={<DeleteUser />} />
+                  <Route path="/admin/delete-transaction" element={<DeleteTransaction />} />
                   <Route path="/admin/beneficiary-review" element={<BeneficiaryReview />} />
                   <Route path="/temp-admin" element={<TempAdmin />} />
                   <Route path="/my-payments" element={<MyPayments />} />
