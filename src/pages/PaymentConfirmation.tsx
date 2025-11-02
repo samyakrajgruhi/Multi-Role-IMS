@@ -123,7 +123,6 @@ const PaymentConfirmation = () => {
             await uploadBytes(storageRef, screenshotFile);
             const screenshotUrl = await getDownloadURL(storageRef);
 
-            // ✅ Format date to match old format
             const day = String(currentDate.getDate()).padStart(2, '0');
             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const monthName = monthNames[currentDate.getMonth()];
@@ -138,7 +137,7 @@ const PaymentConfirmation = () => {
             const transactionsRef = doc(collection(firestore,'transactions'),docId);
 
 
-            // Create transaction document
+    
             await setDoc(transactionsRef, {
                 // User info
                 sfaId: user?.sfaId,
@@ -160,7 +159,7 @@ const PaymentConfirmation = () => {
                 mode: 'UPI',
                 date: currentDate,
                 dateString: formattedDateString,
-                month: monthNum, // ✅ Use monthNum (number) instead of month (string)
+                month: monthNum, 
                 year: year,
                 status: 'pending',
                 createdAt: new Date(),

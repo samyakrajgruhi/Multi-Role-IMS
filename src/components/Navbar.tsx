@@ -82,6 +82,11 @@ const Navbar = () => {
                 </Button>
               </Link>
             )}
+            {isAuthenticated && user?.isCollectionMember && (
+              <Link to="/my-payments" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium">
+                My Payments
+              </Link>
+            )}
           </div>
 
           {/* Right Side */}
