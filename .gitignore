@@ -25,7 +25,7 @@ dist-ssr
 prompt.txt
 test.html
 
-
+.env
 .env.local
 
 
