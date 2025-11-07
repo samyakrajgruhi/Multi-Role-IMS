@@ -13,7 +13,8 @@ import {
   setPersistence,
   browserSessionPersistence
 } from "firebase/auth";
-import { setDoc,doc,getDoc } from "firebase/firestore";
+
+import { setDoc,doc,getDoc, collection, query, where, getDocs} from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { generateAndReserveSfaId} from '@/utils/generateSfaId';
@@ -77,7 +78,8 @@ const Login = () => {
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong'>('weak');
 
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
-  const [isCheckingRegistration, setIsCheckingRegistration] = useState(true); 
+  const [isCheckingRegistration, setIsCheckingRegistration] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Password Reset functionality
   const [resetEmail, setResetEmail] = useState("");
@@ -252,6 +254,9 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if(isSubmitting) {
+      return;
+    }
     if(!isLogin){
       // ✅ Final validation check
       if (!isFormValid()) {
@@ -262,6 +267,8 @@ const Login = () => {
         });
         return;
       }
+
+      setIsSubmitting(true);
 
       // Check if PF Number already exists
       try {
@@ -353,24 +360,53 @@ const Login = () => {
           variant: "destructive",
         });
         setIsLogin(true);
+      }finally {
+        setIsSubmitting(false);
       }
-    }else{
-      try{
-        if(!email){
+    }else {
+      // Login flow
+      setIsSubmitting(true);
+      try {
+        if (!email) {
           alert("Please Enter email.");
+          setIsSubmitting(false);
           return;
         }
+        
         await setPersistence(auth, browserSessionPersistence);
-        await signInWithEmailAndPassword(auth,email,password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        
+        // ✅ Check if user is disabled
+        const usersRef = collection(firestore, 'users');
+        const q = query(usersRef, where('uid', '==', userCredential.user.uid));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          const userData = querySnapshot.docs[0].data();
+          
+          if (userData.isDisabled) {
+            // Sign out immediately
+            await auth.signOut();
+            toast({
+              title: "Account Disabled",
+              description: "Your account has been disabled. Please contact an administrator.",
+              variant: "destructive",
+            });
+            setIsSubmitting(false);
+            return;
+          }
+        }
+        
         console.log("Successfully logged in.");
         navigate("/");
-
-      }catch(e){
+      } catch (e) {
         toast({
           title: "Login Failed",
           description: e.message || "Invalid Email or Password!",
           variant: "destructive",
         });
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -509,8 +545,16 @@ const Login = () => {
               <Button 
                 type="submit" 
                 className="w-full h-11 text-base font-medium"
+                disabled={isSubmitting}
               >
-                Sign In
+                {isSubmitting ? (
+                  <>
+                    <span className="animate-spin h-4 w-4 mr-2 rounded-full border-2 border-white border-t-transparent inline-block"></span>
+                    Signing In...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
               </Button>
             </form>
           ) : isRegistrationOpen ? (
@@ -923,9 +967,16 @@ const Login = () => {
               <Button 
                 type="submit" 
                 className="w-full h-11 text-base font-medium"
-                disabled={!isFormValid()}
+                disabled={!isFormValid() || isSubmitting}
               >
-                {isFormValid() ? 'Create Account' : 'Complete All Fields to Register'}
+                {isSubmitting ? (
+                  <>
+                    <span className="animate-spin h-4 w-4 mr-2 rounded-full border-2 border-white border-t-transparent inline-block"></span>
+                    Creating Account...
+                  </>
+                ) : (
+                  isFormValid() ? 'Create Account' : 'Complete All Fields to Register'
+                )}
               </Button>
 
               {/* Validation Summary */}

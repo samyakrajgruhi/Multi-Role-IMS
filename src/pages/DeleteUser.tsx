@@ -7,8 +7,13 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, UserX, Search, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { firestore } from '@/firebase';
-import { collection, query, where, getDocs, deleteDoc, doc, getDoc } from 'firebase/firestore';
+import { firestore, auth } from '@/firebase';
+import { collection, query, where, getDocs, updateDoc, doc, getDoc } from 'firebase/firestore';
+import {
+  fetchSignInMethodsForEmail,
+  getAuth,
+  updateEmail
+} from 'firebase/auth';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,7 +37,12 @@ interface UserInfo {
   isAdmin?: boolean;
   isCollectionMember?: boolean;
   isProtected?: boolean;
+  isDisabled?: boolean;
+  isDisabledAt?: boolean;
+  disabledAt?: Date;
+  disabledBy?: string;
 }
+
 
 const DeleteUser = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -94,8 +104,6 @@ const DeleteUser = () => {
     try {
       setIsSearching(true);
       const usersRef = collection(firestore, 'users');
-      
-      // Search by SFA ID first
       let q = query(usersRef, where('sfa_id', '==', searchId.trim()));
       let querySnapshot = await getDocs(q);
       
@@ -131,14 +139,25 @@ const DeleteUser = () => {
         phone_number: userData.phone_number || '',
         isAdmin: userData.isAdmin || false,
         isCollectionMember: userData.isCollectionMember || false,
-        isProtected: isProtected
+        isProtected: isProtected,
+        isDisabled: userData.isDisabled || false, // ✅ NEW
+        disabledAt: userData.disabledAt?.toDate(), // ✅ NEW
+        disabledBy: userData.disabledBy // ✅ NEW
       });
 
       if (isProtected) {
         toast({
           title: 'Protected Admin',
-          description: 'This user is a protected admin and cannot be deleted',
+          description: 'This user is a protected admin and cannot be disabled',
           variant: 'destructive'
+        });
+      }
+
+      // ✅ Show warning if already disabled
+      if (userData.isDisabled) {
+        toast({
+          title: 'Account Disabled',
+          description: 'This user account is already disabled',
         });
       }
 
@@ -152,7 +171,7 @@ const DeleteUser = () => {
     } finally {
       setIsSearching(false);
     }
-  };
+};
 
   const handleDeleteUser = async () => {
     if (!foundUser) return;
@@ -169,11 +188,25 @@ const DeleteUser = () => {
       return;
     }
 
+    if(foundUser.isDisabled) {
+      toast({
+        title: 'Already Disabled',
+        description: 'This user account is already disabled',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     try {
       setIsDeleting(true);
       
-      // Delete user document from Firestore
-      await deleteDoc(doc(firestore, 'users', foundUser.id));
+      const userDocRef = doc(firestore, 'users', foundUser.id);
+      await updateDoc(userDocRef, {
+        isDisabled: true,
+        disabledAt: new Date(),
+        disabledBy: user?.sfaId || 'admin',
+        disabledReason: 'Account disabled by admin'
+      });
       
       toast({
         title: 'Success',
@@ -196,6 +229,8 @@ const DeleteUser = () => {
       setIsDeleting(false);
     }
   };
+
+
 
   if (isLoading || isLoadingConfig) {
     return (
@@ -232,7 +267,7 @@ const DeleteUser = () => {
             <p className="text-lg text-text-secondary">Remove a user account from the system</p>
             <div className="mt-4 p-4 bg-warning-light border border-warning rounded-dashboard">
               <p className="text-warning font-medium">
-                ⚠️ Warning: This will permanently delete the user account. Transaction data will be preserved.
+                ⚠️ Warning: This will disable the user's account and prevent them from logging in. Transaction data and user information will be preserved.
               </p>
             </div>
           </div>
@@ -324,6 +359,23 @@ const DeleteUser = () => {
                   </div>
                 </div>
 
+                {foundUser.isDisabled && (
+                  <div className="mb-6 p-4 bg-destructive-light border border-destructive rounded-dashboard">
+                    <p className="font-semibold text-destructive mb-2">Account Status: Disabled</p>
+                    <div className="text-sm text-text-secondary space-y-1">
+                      {foundUser.disabledAt && (
+                        <p>Disabled on: {foundUser.disabledAt.toLocaleDateString()}</p>
+                      )}
+                      {foundUser.disabledBy && (
+                        <p>Disabled by: {foundUser.disabledBy}</p>
+                      )}
+                      <p className="mt-2 text-destructive font-medium">
+                        This user cannot log in to their account.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {foundUser.isProtected && (
                   <div className="mb-6 p-4 bg-warning-light border border-warning rounded-dashboard flex items-start gap-3">
                     <ShieldAlert className="w-5 h-5 text-warning mt-0.5" />
@@ -340,15 +392,17 @@ const DeleteUser = () => {
                   <Button 
                     variant="destructive"
                     onClick={() => setShowDeleteDialog(true)}
-                    disabled={foundUser.isProtected || foundUser.sfa_id === user?.sfaId}
+                    disabled={foundUser.isProtected || foundUser.sfa_id === user?.sfaId || foundUser.isDisabled}
                     className="flex items-center gap-2"
                   >
                     <UserX className="w-4 h-4" />
                     {foundUser.isProtected
-                      ? 'Cannot Delete (Protected)'
+                      ? 'Cannot Disable (Protected)'
                       : foundUser.sfa_id === user?.sfaId
-                      ? 'Cannot Delete (Self)'
-                      : 'Delete User'
+                      ? 'Cannot Disable (Self)'
+                      : foundUser.isDisabled
+                      ? 'Already Disabled'
+                      : 'Disable User Account'
                     }
                   </Button>
                 </div>
@@ -366,13 +420,13 @@ const DeleteUser = () => {
                 </AlertDialogTitle>
                 <AlertDialogDescription className="space-y-2">
                   <p>
-                    This action cannot be undone. This will permanently delete the user account for:
+                    This will disable the user account and prevent login for:
                   </p>
                   <p className="font-semibold text-text-primary">
                     {foundUser?.full_name} ({foundUser?.sfa_id})
                   </p>
                   <p className="text-sm text-text-muted">
-                    Note: All transaction data associated with this user will be preserved in the system.
+                    Note: All user data and transaction history will be preserved. Only login access will be blocked.
                   </p>
                 </AlertDialogDescription>
               </AlertDialogHeader>
@@ -386,10 +440,10 @@ const DeleteUser = () => {
                   {isDeleting ? (
                     <>
                       <span className="animate-spin h-4 w-4 mr-2 rounded-full border-2 border-current border-t-transparent"></span>
-                      Deleting...
+                      Disabling...
                     </>
                   ) : (
-                    'Yes, Delete User'
+                    'Yes, Disable User'
                   )}
                 </AlertDialogAction>
               </AlertDialogFooter>

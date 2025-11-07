@@ -110,7 +110,11 @@ const Payment = () => {
       try {
         console.log('🔄 Fetching collection members...');
         const usersRef = collection(firestore, 'users');
-        const q = query(usersRef, where('isCollectionMember', '==', true));
+
+        const q = query(usersRef, 
+          where('isCollectionMember', '==', true),
+          where('lobby_id','==',user.lobby)
+      );
         const querySnapshot = await getDocs(q);
 
         const members: CollectionMember[] = [];
@@ -127,6 +131,15 @@ const Payment = () => {
 
         console.log('✅ Fetched collection members:', members.length);
         setCollectionMembers(members);
+
+        // ✅ Show info toast if no collection members found
+        if (members.length === 0) {
+          toast({
+            title: "No Collection Members",
+            description: `No collection members found in your lobby (${user.lobby}). Please contact an admin.`,
+            variant: "default"
+          });
+        }
       } catch (error) {
         console.error("❌ Error fetching collection members:", error);
         toast({
@@ -308,11 +321,11 @@ const Payment = () => {
         <div className="max-w-2xl mx-auto px-6 py-12">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-text-primary mb-4">Make a Payment</h1>
-            <p className="text-lg text-text-secondary">Select collection member and amount to contribute</p>
+            <h1 className="text-3xl sm:text-4xl font-bold text-text-primary mb-4">Make a Payment</h1>
+            <p className="text-base sm:text-lg text-text-secondary">Select collection member and amount to contribute</p>
             
             {/* ✅ Show confirmation that data is loaded */}
-            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-success-light text-success rounded-full text-sm font-medium">
+            <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-success-light text-success rounded-full text-xs sm:text-sm font-medium">
               <span className="w-2 h-2 bg-success rounded-full animate-pulse"></span>
               Profile Loaded: {user.sfaId}
             </div>
@@ -322,8 +335,11 @@ const Payment = () => {
           <Card className="p-8 space-y-6">
             {/* Collection Member Selection */}
             <div className="space-y-4">
-              <label className="text-lg font-semibold text-text-primary">
+              <label className="text-base sm:text-lg font-semibold text-text-primary">
                 Collection Member
+                <span className="ml-2 text-xs sm:text-sm font-normal text-text-secondary">
+                  (From {user.lobby} Lobby)
+                </span>
               </label>
               <Select 
                 value={selectedCollector} 
@@ -351,7 +367,7 @@ const Payment = () => {
 
             {/* Amount Selection */}
             <div className="space-y-4">
-              <label className="text-lg font-semibold text-text-primary">
+              <label className="text-base sm:text-lg font-semibold text-text-primary">
                 Amount (₹)
               </label>
               {isLoadingAmounts ? (
@@ -364,13 +380,13 @@ const Payment = () => {
                     <button
                       key={amount}
                       onClick={() => setSelectedAmount(amount.toString())}
-                      className={`p-4 rounded-dashboard border-2 transition-all duration-200 ${
+                      className={`p-3 sm:p-4 rounded-dashboard border-2 transition-all duration-200 ${
                         selectedAmount === amount.toString()
                           ? 'border-primary bg-primary-light text-primary'
                           : 'border-border hover:border-primary hover:bg-surface-hover text-text-secondary'
                       }`}
                     >
-                      <div className="text-2xl font-bold">₹{amount}</div>
+                      <div className="text-xl sm:text-2xl font-bold">₹{amount}</div>
                     </button>
                   ))}
                 </div>
@@ -381,15 +397,17 @@ const Payment = () => {
             <div className="pt-8">
               <Button 
                 onClick={handleProceedToPay}
-                disabled={!selectedCollector || !selectedAmount || isLoading || isLoadingAmounts}
-                className="w-full py-4 text-lg font-semibold"
+                disabled={!selectedCollector || !selectedAmount || isLoading || isLoadingAmounts || collectionMembers.length === 0}
+                className="w-full py-3 sm:py-4 text-base sm:text-lg font-semibold"
                 size="lg"
               >
                 {isLoading || isLoadingAmounts ? (
                   <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
                     Loading...
                   </>
+                ) : collectionMembers.length === 0 ? (
+                  `No Collection Members in ${user.lobby}`
                 ) : (
                   `Proceed to Pay ₹${selectedAmount || '0'}`
                 )}
@@ -398,7 +416,7 @@ const Payment = () => {
 
             {/* Payment Info */}
             <div className="pt-4 border-t border-border">
-              <p className="text-sm text-text-muted text-center">
+              <p className="text-xs sm:text-sm text-text-muted text-center">
                 You will be redirected to payment confirmation page
               </p>
             </div>

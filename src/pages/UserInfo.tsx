@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Edit, Save, X, User, Upload, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { Link } from 'react-router-dom';
+import { doc, updateDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { firestore, storage } from '@/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
@@ -29,11 +30,11 @@ interface Nominee {
 }
 
 const UserInfo = () => {
-  const { user, refreshUserData} = useAuth();
+  const { user, refreshUserData } = useAuth();
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  
+
   // QR Code Management State
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [newQrFile, setNewQrFile] = useState<File | null>(null);
@@ -59,6 +60,64 @@ const UserInfo = () => {
     nominees: [] as Nominee[]
   });
 
+  const [paymentHistory, setPaymentHistory] = useState<Array<{
+    id: string;
+    date: string;
+    amount: number;
+    paymentMode: string;
+    status: string;
+    receiver: string;
+    remarks: string;
+  }>>([]);
+  const [isLoadingPayments, setIsLoadingPayments] = useState(true);
+
+  useEffect(() => {
+    const fetchPaymentHistory = async () => {
+      if (!user?.sfaId) {
+        setIsLoadingPayments(false);
+        return;
+      }
+
+      try {
+        setIsLoadingPayments(true);
+        const transactionsRef = collection(firestore, 'transactions');
+        const q = query(
+          transactionsRef, 
+          where('sfaId', '==', user.sfaId),
+          orderBy('date', 'desc')
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        const payments = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            date: data.dateString || new Date(data.date?.toDate()).toLocaleDateString(),
+            amount: parseFloat(data.amount) || 0,
+            paymentMode: data.mode || 'UPI',
+            status: data.verified ? 'Verified' : 'Pending',
+            receiver: data.receiver || 'Unknown',
+            remarks: data.remarks || 'Monthly contribution'
+          };
+        });
+
+        setPaymentHistory(payments);
+      } catch (error) {
+        console.error('Error fetching payment history:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load payment history',
+          variant: 'destructive'
+        });
+      } finally {
+        setIsLoadingPayments(false);
+      }
+    };
+
+    fetchPaymentHistory();
+  }, [user?.sfaId, toast]);
+
   const [editedInfo, setEditedInfo] = useState({ ...userInfo });
 
   // Fetch complete user data including new fields
@@ -74,7 +133,7 @@ const UserInfo = () => {
         if (!querySnapshot.empty) {
           const userData = querySnapshot.docs[0].data();
           const userRole = user.isAdmin ? 'Admin' : (user.isCollectionMember ? 'Collection Member' : 'Member');
-          
+
           const completeUserInfo = {
             name: user.name || 'User Name',
             sfaId: user.sfaId || 'SFA000',
@@ -155,81 +214,81 @@ const UserInfo = () => {
 
   // Update the handleSaveChanges function
 
-const handleSaveChanges = async () => {
-  // ✅ Validate user data before saving
-  if (!user?.sfaId || user.sfaId === 'SFA000') {
-    toast({
-      title: "Error",
-      description: "Cannot update profile - user data not loaded properly",
-      variant: "destructive"
-    });
-    return;
-  }
-
-  try {
-    setIsUpdating(true);
-    
-    console.log('💾 Saving user data for SFA ID:', user.sfaId);
-    
-    const usersRef = collection(firestore, 'users');
-    const q = query(usersRef, where('sfa_id', '==', user.sfaId));
-    const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.empty) {
+  const handleSaveChanges = async () => {
+    // ✅ Validate user data before saving
+    if (!user?.sfaId || user.sfaId === 'SFA000') {
       toast({
         title: "Error",
-        description: "Your user document was not found. Please contact support.",
+        description: "Cannot update profile - user data not loaded properly",
         variant: "destructive"
       });
       return;
     }
 
-    const userDocRef = doc(firestore, 'users', querySnapshot.docs[0].id);
-    
-    const updateData = {
-      full_name: editedInfo.name,
-      phone_number: editedInfo.phoneNumber,
-      emergency_number: editedInfo.emergencyNumber,
-      lobby_id: editedInfo.lobby,
-      cms_id: editedInfo.cmsId,
-      designation: editedInfo.designation,
-      date_of_birth: editedInfo.dateOfBirth,
-      blood_group: editedInfo.bloodGroup,
-      present_status: editedInfo.presentStatus,
-      pf_number: editedInfo.pfNumber,
-      updatedAt: new Date()
-    };
+    try {
+      setIsUpdating(true);
 
-    console.log('💾 Updating with data:', updateData);
-    
-    await updateDoc(userDocRef, updateData);
+      console.log('💾 Saving user data for SFA ID:', user.sfaId);
 
-    setUserInfo(editedInfo);
-    setIsEditing(false);
-    
-    // ✅ Refresh user data in context
-    
-    await refreshUserData();
-    
-    toast({
-      title: "Success",
-      description: "Your profile has been updated successfully"
-    });
-  } catch (error) {
-    console.error('❌ Error updating profile:', error);
-    toast({
-      title: "Error",
-      description: "Failed to update profile. Please try again.",
-      variant: "destructive"
-    });
-  } finally {
-    setIsUpdating(false);
-  }
-};
+      const usersRef = collection(firestore, 'users');
+      const q = query(usersRef, where('sfa_id', '==', user.sfaId));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        toast({
+          title: "Error",
+          description: "Your user document was not found. Please contact support.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const userDocRef = doc(firestore, 'users', querySnapshot.docs[0].id);
+
+      const updateData = {
+        full_name: editedInfo.name,
+        phone_number: editedInfo.phoneNumber,
+        emergency_number: editedInfo.emergencyNumber,
+        lobby_id: editedInfo.lobby,
+        cms_id: editedInfo.cmsId,
+        designation: editedInfo.designation,
+        date_of_birth: editedInfo.dateOfBirth,
+        blood_group: editedInfo.bloodGroup,
+        present_status: editedInfo.presentStatus,
+        pf_number: editedInfo.pfNumber,
+        updatedAt: new Date()
+      };
+
+      console.log('💾 Updating with data:', updateData);
+
+      await updateDoc(userDocRef, updateData);
+
+      setUserInfo(editedInfo);
+      setIsEditing(false);
+
+      // ✅ Refresh user data in context
+
+      await refreshUserData();
+
+      toast({
+        title: "Success",
+        description: "Your profile has been updated successfully"
+      });
+    } catch (error) {
+      console.error('❌ Error updating profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const handleQrFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    
+
     if (!file) {
       setNewQrFile(null);
       setNewQrPreview(null);
@@ -255,7 +314,7 @@ const handleSaveChanges = async () => {
     }
 
     setNewQrFile(file);
-    
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setNewQrPreview(reader.result as string);
@@ -311,8 +370,8 @@ const handleSaveChanges = async () => {
   };
 
   const SaveButton = () => (
-    <Button 
-      onClick={handleSaveChanges} 
+    <Button
+      onClick={handleSaveChanges}
       disabled={isUpdating}
       className="flex items-center space-x-2"
     >
@@ -330,61 +389,36 @@ const handleSaveChanges = async () => {
     </Button>
   );
 
-  const paymentHistory = [
-    {
-      id: '1',
-      date: '2024-05-15',
-      amount: 25,
-      paymentMode: 'UPI',
-      status: 'Completed',
-      receiver: 'Amit Verma',
-      remarks: 'Monthly contribution'
-    },
-    {
-      id: '2',
-      date: '2024-04-15',
-      amount: 25,
-      paymentMode: 'Cash',
-      status: 'Completed',
-      receiver: 'Priya Sharma',
-      remarks: 'Monthly contribution'
-    },
-    {
-      id: '3',
-      date: '2024-03-15',
-      amount: 60,
-      paymentMode: 'Bank Transfer',
-      status: 'Completed',
-      receiver: 'Ravi Kumar',
-      remarks: 'Special contribution'
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <main className="pt-20">
         <div className="max-w-4xl mx-auto px-6 py-12">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-text-primary mb-4">User Information</h1>
-            <p className="text-lg text-text-secondary">Manage your profile and SFA membership details</p>
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-text-primary mb-2 sm:mb-4">User Information</h1>
+            <p className="text-sm sm:text-base md:text-lg text-text-secondary">Manage your profile and SFA membership details</p>
           </div>
 
-          <Card className="p-8 mb-8">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-                  <User className="w-8 h-8 text-white" />
+
+          <Card className="p-4 sm:p-6 md:p-8 mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                  <User className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-text-primary">{userInfo.name}</h2>
-                  <p className="text-text-secondary">{userInfo.role}</p>
+                <div className="min-w-0">
+                  <h2 className="text-xl sm:text-2xl font-bold text-text-primary truncate">{userInfo.name}</h2>
+                  <p className="text-sm sm:text-base text-text-secondary">{userInfo.role}</p>
                 </div>
               </div>
-              
+
               {!isEditing && (
-                <Button onClick={handleEdit} className="flex items-center space-x-2">
+                <Button
+                  onClick={handleEdit}
+                  className="flex items-center justify-center space-x-2 w-full sm:w-auto"
+                  size="sm"
+                >
                   <Edit className="w-4 h-4" />
                   <span>Edit Profile</span>
                 </Button>
@@ -394,21 +428,21 @@ const handleSaveChanges = async () => {
             <div className="space-y-6">
               {/* Basic Information Section */}
               <div>
-                <h3 className="text-xl font-semibold text-text-primary mb-4 pb-2 border-b border-border">
+                <h3 className="text-lg sm:text-xl font-semibold text-text-primary mb-4 pb-2 border-b border-border">
                   Basic Information
                 </h3>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="name" className="text-text-secondary">Full Name</Label>
+                    <Label htmlFor="name" className="text-xs sm:text-sm text-text-secondary">Full Name</Label>
                     {isEditing ? (
                       <Input
                         id="name"
                         value={editedInfo.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
-                        className="mt-1"
+                        className="mt-1 text-sm"
                       />
                     ) : (
-                      <p className="mt-1 p-2 bg-surface rounded-dashboard text-text-primary">{userInfo.name}</p>
+                      <p className="mt-1 p-2 bg-surface rounded-dashboard text-sm sm:text-base text-text-primary break-words">{userInfo.name}</p>
                     )}
                   </div>
 
@@ -475,8 +509,8 @@ const handleSaveChanges = async () => {
                   <div>
                     <Label htmlFor="lobby" className="text-text-secondary">Lobby</Label>
                     {isEditing ? (
-                      <Select 
-                        value={editedInfo.lobby} 
+                      <Select
+                        value={editedInfo.lobby}
                         onValueChange={(value) => handleInputChange('lobby', value)}
                         disabled={isLoadingLobbies}
                       >
@@ -524,8 +558,8 @@ const handleSaveChanges = async () => {
                   <div>
                     <Label htmlFor="designation" className="text-text-secondary">Designation</Label>
                     {isEditing ? (
-                      <Select 
-                        value={editedInfo.designation} 
+                      <Select
+                        value={editedInfo.designation}
                         onValueChange={(value) => handleInputChange('designation', value)}
                       >
                         <SelectTrigger className="mt-1 bg-surface border border-border">
@@ -545,8 +579,8 @@ const handleSaveChanges = async () => {
                   <div>
                     <Label htmlFor="presentStatus" className="text-text-secondary">Present Status</Label>
                     {isEditing ? (
-                      <Select 
-                        value={editedInfo.presentStatus} 
+                      <Select
+                        value={editedInfo.presentStatus}
                         onValueChange={(value) => handleInputChange('presentStatus', value)}
                       >
                         <SelectTrigger className="mt-1 bg-surface border border-border">
@@ -591,8 +625,8 @@ const handleSaveChanges = async () => {
                   <div>
                     <Label htmlFor="bloodGroup" className="text-text-secondary">Blood Group</Label>
                     {isEditing ? (
-                      <Select 
-                        value={editedInfo.bloodGroup} 
+                      <Select
+                        value={editedInfo.bloodGroup}
                         onValueChange={(value) => handleInputChange('bloodGroup', value)}
                       >
                         <SelectTrigger className="mt-1 bg-surface border border-border">
@@ -612,51 +646,62 @@ const handleSaveChanges = async () => {
               </div>
 
               {/* Nominees Section */}
-              {userInfo.nominees && userInfo.nominees.length > 0 && (
-                <div>
-                  <h3 className="text-xl font-semibold text-text-primary mb-4 pb-2 border-b border-border">
-                    Nominees
-                  </h3>
-                  <div className="space-y-4">
-                    {userInfo.nominees.map((nominee, index) => (
-                      <div key={index} className="p-4 bg-surface rounded-dashboard border border-border">
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div>
-                            <Label className="text-text-secondary text-sm">Name</Label>
-                            <p className="text-text-primary font-medium">{nominee.name}</p>
-                          </div>
-                          <div>
-                            <Label className="text-text-secondary text-sm">Relationship</Label>
-                            <p className="text-text-primary">{nominee.relationship}</p>
-                          </div>
-                          <div>
-                            <Label className="text-text-secondary text-sm">Phone Number</Label>
-                            <p className="text-text-primary font-mono">{nominee.phoneNumber}</p>
-                          </div>
-                          <div>
-                            <Label className="text-text-secondary text-sm">Share Percentage</Label>
-                            <p className="text-text-primary font-semibold">{nominee.sharePercentage}%</p>
-                          </div>
-                        </div>
+              <div className="space-y-3 sm:space-y-4">
+                {userInfo.nominees.map((nominee, index) => (
+                  <div key={index} className="p-3 sm:p-4 bg-surface rounded-dashboard border border-border">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div>
+                        <Label className="text-xs text-text-secondary">Name</Label>
+                        <p className="text-sm text-text-primary font-medium break-words">{nominee.name}</p>
                       </div>
-                    ))}
+                      <div>
+                        <Label className="text-xs text-text-secondary">Relationship</Label>
+                        <p className="text-sm text-text-primary">{nominee.relationship}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-text-secondary">Phone Number</Label>
+                        <p className="text-sm text-text-primary font-mono">{nominee.phoneNumber}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-text-secondary">Share Percentage</Label>
+                        <p className="text-sm text-text-primary font-semibold">{nominee.sharePercentage}%</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
 
             {/* Action Buttons */}
             {isEditing && (
-              <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-border">
-                <Button 
-                  variant="outline" 
+              <div className="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-4 mt-8 pt-6 border-t border-border">
+                <Button
+                  variant="outline"
                   onClick={handleDiscard}
-                  className="flex items-center space-x-2"
+                  className="flex items-center justify-center space-x-2 w-full sm:w-auto order-2 sm:order-1"
+                  size="sm"
                 >
                   <X className="w-4 h-4" />
                   <span>Discard Changes</span>
                 </Button>
-                <SaveButton />
+                <Button
+                  onClick={handleSaveChanges}
+                  disabled={isUpdating}
+                  className="flex items-center justify-center space-x-2 w-full sm:w-auto order-1 sm:order-2"
+                  size="sm"
+                >
+                  {isUpdating ? (
+                    <>
+                      <span className="animate-spin h-4 w-4 rounded-full border-2 border-white border-t-transparent"></span>
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Save Changes</span>
+                    </>
+                  )}
+                </Button>
               </div>
             )}
           </Card>
@@ -665,16 +710,17 @@ const handleSaveChanges = async () => {
           {user?.isCollectionMember && (
             <Card className="p-8 mb-8">
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <h3 className="text-2xl font-bold text-text-primary mb-2">QR Code Management</h3>
-                    <p className="text-text-secondary">Manage your payment QR code</p>
+                    <h3 className="text-xl sm:text-2xl font-bold text-text-primary mb-1 sm:mb-2">QR Code Management</h3>
+                    <p className="text-sm sm:text-base text-text-secondary">Manage your payment QR code</p>
                   </div>
                   {qrCodeUrl && (
                     <Button
                       variant="outline"
                       onClick={() => setShowQrDialog(true)}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 w-full sm:w-auto"
+                      size="sm"
                     >
                       <Eye className="w-4 h-4" />
                       View Current QR
@@ -715,7 +761,7 @@ const handleSaveChanges = async () => {
                       <Label className="text-base font-semibold">
                         {qrCodeUrl ? 'Update QR Code' : 'Upload QR Code'}
                       </Label>
-                      
+
                       {!newQrPreview ? (
                         <div className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:bg-surface transition-colors">
                           <input
@@ -743,16 +789,16 @@ const handleSaveChanges = async () => {
                               <X className="w-4 h-4" />
                             </Button>
                             <div className="flex flex-col items-center">
-                              <img 
-                                src={newQrPreview} 
-                                alt="QR Preview" 
+                              <img
+                                src={newQrPreview}
+                                alt="QR Preview"
                                 className="w-64 h-64 object-contain border border-border rounded-lg"
                               />
                               <p className="text-sm text-text-secondary mt-3">{newQrFile?.name}</p>
                             </div>
                           </div>
 
-                          <Button 
+                          <Button
                             onClick={handleUploadQr}
                             disabled={isUploadingQr}
                             className="w-full"
@@ -780,35 +826,81 @@ const handleSaveChanges = async () => {
 
           {/* Payment History Section */}
           <Card className="p-8">
-            <h3 className="text-2xl font-bold text-text-primary mb-6">Payment History</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4 text-text-secondary font-semibold">Date</th>
-                    <th className="text-left py-3 px-4 text-text-secondary font-semibold">Amount</th>
-                    <th className="text-left py-3 px-4 text-text-secondary font-semibold">Payment Mode</th>
-                    <th className="text-left py-3 px-4 text-text-secondary font-semibold">Receiver</th>
-                    <th className="text-left py-3 px-4 text-text-secondary font-semibold">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paymentHistory.map((payment) => (
-                    <tr key={payment.id} className="border-b border-border hover:bg-surface transition-colors">
-                      <td className="py-3 px-4 text-text-primary">{payment.date}</td>
-                      <td className="py-3 px-4 text-text-primary font-semibold">₹{payment.amount}</td>
-                      <td className="py-3 px-4 text-text-primary">{payment.paymentMode}</td>
-                      <td className="py-3 px-4 text-text-primary">{payment.receiver}</td>
-                      <td className="py-3 px-4">
-                        <span className="px-2 py-1 bg-success-light text-success rounded-dashboard-sm text-xs font-medium">
-                          {payment.status}
+            <h3 className="text-xl sm:text-2xl font-bold text-text-primary mb-6">Payment History</h3>
+            
+            {isLoadingPayments ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin h-12 w-12 rounded-full border-4 border-primary border-t-transparent"></div>
+              </div>
+            ) : paymentHistory.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-text-secondary mb-4">No payment history found</p>
+                <Button asChild variant="outline">
+                  <Link to="/payment">Make Your First Payment</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="overflow-hidden">
+                    <table className="min-w-full divide-y divide-border">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-text-secondary font-semibold whitespace-nowrap">Date</th>
+                          <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-text-secondary font-semibold whitespace-nowrap">Amount</th>
+                          <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-text-secondary font-semibold whitespace-nowrap hidden sm:table-cell">Payment Mode</th>
+                          <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-text-secondary font-semibold whitespace-nowrap">Receiver</th>
+                          <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-text-secondary font-semibold whitespace-nowrap hidden sm:table-cell">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paymentHistory.map((payment) => (
+                          <tr key={payment.id} className="border-b border-border hover:bg-surface transition-colors">
+                            <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-text-primary whitespace-nowrap">
+                              {payment.date}
+                            </td>
+                            <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-text-primary font-semibold whitespace-nowrap">
+                              ₹{payment.amount}
+                            </td>
+                            <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-text-primary hidden sm:table-cell">
+                              {payment.paymentMode}
+                            </td>
+                            <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-text-primary truncate max-w-[100px] sm:max-w-none">
+                              {payment.receiver}
+                            </td>
+                            <td className="py-2 sm:py-3 px-2 sm:px-4 hidden sm:table-cell">
+                              <span className={`px-2 py-1 rounded-dashboard-sm text-xs font-medium whitespace-nowrap ${
+                                payment.status === 'Verified' 
+                                  ? 'bg-success-light text-success' 
+                                  : 'bg-warning-light text-warning'
+                              }`}>
+                                {payment.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    {/* Summary Section */}
+                    <div className="mt-6 p-4 bg-surface rounded-lg border border-border">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-text-secondary">Total Payments Made</span>
+                        <span className="text-lg font-bold text-primary">
+                          ₹{paymentHistory.reduce((sum, p) => sum + p.amount, 0)}
                         </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-sm text-text-secondary">Number of Transactions</span>
+                        <span className="text-lg font-bold text-text-primary">
+                          {paymentHistory.length}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
       </main>
@@ -822,9 +914,9 @@ const handleSaveChanges = async () => {
           </DialogHeader>
           {qrCodeUrl && (
             <div className="flex justify-center p-4 bg-surface rounded-lg border border-border">
-              <img 
-                src={qrCodeUrl} 
-                alt="Payment QR Code" 
+              <img
+                src={qrCodeUrl}
+                alt="Payment QR Code"
                 className="w-96 h-96 object-contain"
               />
             </div>

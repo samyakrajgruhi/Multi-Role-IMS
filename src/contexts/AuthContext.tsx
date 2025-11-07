@@ -10,6 +10,7 @@ import { doc, getDocs, collection, query, where  } from "firebase/firestore";
 
 
 interface FirestoreUserData {
+  [x: string]: any;
   full_name?: string;
   cms_id?: string;
   lobby_id?: string;
@@ -72,6 +73,7 @@ interface UserData {
   isCollectionMember?: boolean;
   emergencyNumber?: string;
   sfaId?: string;
+  isDisabled?: boolean;
 }
 
 interface AuthContextType {
@@ -98,37 +100,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isDataLoaded, setIsDataLoaded] = useState(false); // ✅ NEW
 
   const fetchAndSetUserData = async (firebaseUser: User) => {
-    try {
-      console.log('🔄 Fetching user data for:', firebaseUser.uid);
-      setIsDataLoaded(false); // Mark as not loaded while fetching
-      
-      const userData = await getUserData(firebaseUser.uid);
-      
-      if (!userData.sfa_id) {
-        console.error('⚠️ WARNING: No SFA ID found in user data!', userData);
-      }
-      
-      const fullUserData: UserData = {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email,
-        name: userData.full_name || 'User Name',
-        cmsId: userData.cms_id || 'CMS00000',
-        lobby: userData.lobby_id || 'ANVT',
-        isAdmin: userData.isAdmin || false,
-        isCollectionMember: userData.isCollectionMember || false,
-        sfaId: userData.sfa_id || 'SFA000',
-        phoneNumber: userData.phone_number || '',
-        emergencyNumber: userData.emergency_number || ''
-      };
-      
-      console.log('✅ Setting user data:', fullUserData);
-      setUser(fullUserData);
-      setIsDataLoaded(true); // ✅ Mark as loaded
-    } catch (error) {
-      console.error('❌ Error in fetchAndSetUserData:', error);
-      setIsDataLoaded(true); // Still mark as loaded to prevent infinite loading
+  try {
+    console.log('🔄 Fetching user data for:', firebaseUser.uid);
+    setIsDataLoaded(false);
+    
+    const userData = await getUserData(firebaseUser.uid);
+    
+    // ✅ Check if user is disabled
+    if (userData.isDisabled) {
+      console.error('⚠️ User account is disabled');
+      await firebaseSignOut(auth);
+      throw new Error('Your account has been disabled. Please contact an administrator.');
     }
-  };
+    
+    if (!userData.sfa_id) {
+      console.error('⚠️ WARNING: No SFA ID found in user data!', userData);
+    }
+    
+    const fullUserData: UserData = {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      name: userData.full_name || 'User Name',
+      cmsId: userData.cms_id || 'CMS00000',
+      lobby: userData.lobby_id || 'ANVT',
+      isAdmin: userData.isAdmin || false,
+      isCollectionMember: userData.isCollectionMember || false,
+      sfaId: userData.sfa_id || 'SFA000',
+      phoneNumber: userData.phone_number || '',
+      emergencyNumber: userData.emergency_number || ''
+    };
+    
+    console.log('✅ Setting user data:', fullUserData);
+    setUser(fullUserData);
+    setIsDataLoaded(true);
+  } catch (error) {
+    console.error('❌ Error in fetchAndSetUserData:', error);
+    setIsDataLoaded(true);
+    // Force logout if disabled
+    await firebaseSignOut(auth);
+    setUser(null);
+  }
+};
 
   useEffect(() => {
     setIsLoading(true);

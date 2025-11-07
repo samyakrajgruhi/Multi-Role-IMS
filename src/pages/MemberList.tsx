@@ -17,6 +17,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { firestore } from '@/firebase';
 import { collection, getDocs, updateDoc, doc, query, where, getDoc } from 'firebase/firestore';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Eye, Phone, Mail, Calendar, Users as UsersIcon } from 'lucide-react';
 import { requireAdmin } from '@/hooks/useAdminCheck';
 
 interface MemberData {
@@ -29,7 +37,16 @@ interface MemberData {
   isAdmin?: boolean;
   isCollectionMember: boolean;
   email: string;
+  phoneNumber?: string;
+  emergencyNumber?: string;
+  designation?: string;
+  dateOfBirth?: string;
+  bloodGroup?: string;
+  presentStatus?: string;
+  pfNumber?: string;
+  registrationDate?: Date;
 }
+
 
 const MemberList = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -42,6 +59,8 @@ const MemberList = () => {
   const [processing, setProcessing] = useState<string | null>(null);
   const [protectedAdmins, setProtectedAdmins] = useState<string[]>([]);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+  const [selectedMember, setSelectedMember] = useState<MemberData | null>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
 
   // Check if user is admin
   const isAdmin = user?.isAdmin;
@@ -97,7 +116,15 @@ const MemberList = () => {
             email: data.email || 'N/A',
             isProtected: isProtectedAdmin,
             isAdmin: data.isAdmin || false,
-            isCollectionMember: data.isCollectionMember || false
+            isCollectionMember: data.isCollectionMember || false,
+            phoneNumber: data.phone_number,
+            emergencyNumber: data.emergency_number,
+            designation: data.designation,
+            dateOfBirth: data.date_of_birth,
+            bloodGroup: data.blood_group,
+            presentStatus: data.present_status,
+            pfNumber: data.pf_number,
+            registrationDate: data.registration_date?.toDate()
           };
         });
         
@@ -119,6 +146,11 @@ const MemberList = () => {
       fetchMembers();
     }
   }, [isAuthenticated, isAdmin, protectedAdmins, isLoadingConfig, toast]);
+
+  const handleViewDetails = (member: MemberData) => {
+    setSelectedMember(member);
+    setShowDetailsDialog(true);
+};
 
   // Handle Admin Toggle
   const handleAdminToggle = async (memberId: string, isCurrentlyAdmin: boolean, sfaId: string, isProtected: boolean) => {
@@ -320,6 +352,17 @@ const MemberList = () => {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2 flex-wrap">
+                              {/* ✅ NEW: View Details Button */}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewDetails(member)}
+                                className="flex items-center gap-1"
+                              >
+                                <Eye className="w-4 h-4" />
+                                <span className="hidden sm:inline">View</span>
+                              </Button>
+                              
                               <Button
                                 variant={member.isAdmin ? "destructive" : "default"}
                                 size="sm"
@@ -337,7 +380,7 @@ const MemberList = () => {
                                   member.isProtected ? (
                                     <>
                                       <ShieldAlert className="w-4 h-4" />
-                                      Protected
+                                      <span className="hidden sm:inline">Protected</span>
                                     </>
                                   ) : (
                                     "Remove Admin"
@@ -358,6 +401,186 @@ const MemberList = () => {
           </Card>
         </div>
       </main>
+      {/* Member Details Dialog */}
+      <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              Member Details
+              {selectedMember?.isProtected && (
+                <span className="px-2 py-1 bg-warning-light text-warning rounded-dashboard-sm text-xs font-medium flex items-center gap-1">
+                  <ShieldAlert className="w-3 h-3" />
+                  PROTECTED
+                </span>
+              )}
+            </DialogTitle>
+            <DialogDescription>Complete member information and profile details</DialogDescription>
+          </DialogHeader>
+          
+          {selectedMember && (
+            <div className="space-y-6 pt-4">
+              {/* Basic Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-surface rounded-lg border border-border">
+                <div>
+                  <p className="text-xs text-text-secondary mb-1 flex items-center gap-1">
+                    <UsersIcon className="w-3 h-3" />
+                    Full Name
+                  </p>
+                  <p className="font-semibold text-text-primary">{selectedMember.name}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-text-secondary mb-1">SFA ID</p>
+                  <p className="font-semibold text-primary">{selectedMember.sfaId}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-text-secondary mb-1">CMS ID</p>
+                  <p className="font-semibold text-accent">{selectedMember.cmsId}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-text-secondary mb-1">Lobby</p>
+                  <p className="font-semibold text-text-primary">{selectedMember.lobby}</p>
+                </div>
+              </div>
+
+              {/* Contact Info */}
+              <div>
+                <h4 className="text-sm font-semibold text-text-primary mb-3 pb-2 border-b border-border">
+                  Contact Information
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-3 bg-surface rounded-lg">
+                    <p className="text-xs text-text-secondary mb-1 flex items-center gap-1">
+                      <Mail className="w-3 h-3" />
+                      Email
+                    </p>
+                    <p className="text-sm text-text-primary break-all">{selectedMember.email}</p>
+                  </div>
+                  {selectedMember.phoneNumber && (
+                    <div className="p-3 bg-surface rounded-lg">
+                      <p className="text-xs text-text-secondary mb-1 flex items-center gap-1">
+                        <Phone className="w-3 h-3" />
+                        Phone Number
+                      </p>
+                      <p className="text-sm text-text-primary font-mono">{selectedMember.phoneNumber}</p>
+                    </div>
+                  )}
+                  {selectedMember.emergencyNumber && (
+                    <div className="p-3 bg-surface rounded-lg">
+                      <p className="text-xs text-text-secondary mb-1 flex items-center gap-1">
+                        <Phone className="w-3 h-3" />
+                        Emergency Contact
+                      </p>
+                      <p className="text-sm text-text-primary font-mono">{selectedMember.emergencyNumber}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Professional Details */}
+              {(selectedMember.designation || selectedMember.presentStatus || selectedMember.pfNumber) && (
+                <div>
+                  <h4 className="text-sm font-semibold text-text-primary mb-3 pb-2 border-b border-border">
+                    Professional Details
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {selectedMember.designation && (
+                      <div className="p-3 bg-surface rounded-lg">
+                        <p className="text-xs text-text-secondary mb-1">Designation</p>
+                        <p className="text-sm text-text-primary font-medium">{selectedMember.designation}</p>
+                      </div>
+                    )}
+                    {selectedMember.presentStatus && (
+                      <div className="p-3 bg-surface rounded-lg">
+                        <p className="text-xs text-text-secondary mb-1">Present Status</p>
+                        <p className="text-sm text-text-primary">{selectedMember.presentStatus}</p>
+                      </div>
+                    )}
+                    {selectedMember.pfNumber && (
+                      <div className="p-3 bg-surface rounded-lg">
+                        <p className="text-xs text-text-secondary mb-1">PF Number</p>
+                        <p className="text-sm text-text-primary font-mono">{selectedMember.pfNumber}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Personal Details */}
+              {(selectedMember.dateOfBirth || selectedMember.bloodGroup) && (
+                <div>
+                  <h4 className="text-sm font-semibold text-text-primary mb-3 pb-2 border-b border-border">
+                    Personal Details
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {selectedMember.dateOfBirth && (
+                      <div className="p-3 bg-surface rounded-lg">
+                        <p className="text-xs text-text-secondary mb-1 flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          Date of Birth
+                        </p>
+                        <p className="text-sm text-text-primary">
+                          {new Date(selectedMember.dateOfBirth).toLocaleDateString()}
+                        </p>
+                      </div>
+                    )}
+                    {selectedMember.bloodGroup && (
+                      <div className="p-3 bg-surface rounded-lg">
+                        <p className="text-xs text-text-secondary mb-1">Blood Group</p>
+                        <p className="text-sm text-text-primary font-bold">{selectedMember.bloodGroup}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Role & Status */}
+              <div>
+                <h4 className="text-sm font-semibold text-text-primary mb-3 pb-2 border-b border-border">
+                  Role & Permissions
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedMember.isProtected && (
+                    <span className="px-3 py-1.5 bg-warning-light text-warning rounded-dashboard text-sm font-medium flex items-center gap-1">
+                      <ShieldAlert className="w-4 h-4" />
+                      Protected Admin
+                    </span>
+                  )}
+                  {selectedMember.isAdmin && (
+                    <span className="px-3 py-1.5 bg-primary-light text-primary rounded-dashboard text-sm font-medium flex items-center gap-1">
+                      <Shield className="w-4 h-4" />
+                      Admin
+                    </span>
+                  )}
+                  {selectedMember.isCollectionMember && (
+                    <span className="px-3 py-1.5 bg-accent-light text-accent rounded-dashboard text-sm font-medium">
+                      Collection Member
+                    </span>
+                  )}
+                  {!selectedMember.isAdmin && !selectedMember.isCollectionMember && (
+                    <span className="px-3 py-1.5 bg-surface rounded-dashboard text-sm text-text-muted">
+                      Member
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Registration Info */}
+              {selectedMember.registrationDate && (
+                <div className="p-4 bg-surface rounded-lg border border-border">
+                  <p className="text-xs text-text-secondary mb-1">Member Since</p>
+                  <p className="text-sm text-text-primary font-medium">
+                    {selectedMember.registrationDate.toLocaleDateString('en-IN', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

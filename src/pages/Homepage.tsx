@@ -149,7 +149,7 @@ const Homepage = () => {
       />
 
       {/* Section 3: Key Statistics */}
-      <section className="py-16 px-6">
+      {/* <section className="py-16 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-text-primary mb-4">Our Impact</h2>
@@ -175,7 +175,9 @@ const Homepage = () => {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
+
+{/* Section 4: Quote */}
 
       {/* Section 4: Quote */}
       <Quote 

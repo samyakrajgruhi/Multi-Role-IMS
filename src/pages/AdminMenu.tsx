@@ -89,44 +89,81 @@ const AdminMenu = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      
-      <main className="pt-20">
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="text-center mb-12">
-            <div className="flex justify-center mb-4">
-              <Shield className="w-16 h-16 text-primary" />
-            </div>
-            <h1 className="text-4xl font-bold text-text-primary mb-4">Admin Panel</h1>
-            <p className="text-lg text-text-secondary">Choose an option to manage your organization</p>
+  <div className="min-h-screen bg-background">
+    <Navbar />
+    
+    <main className="pt-20">
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <div className="text-center mb-12">
+          <div className="flex justify-center mb-4">
+            <Shield className="w-16 h-16 text-primary" />
           </div>
+          <h1 className="text-4xl font-bold text-text-primary mb-4">Admin Panel</h1>
+          <p className="text-lg text-text-secondary">Choose an option to manage your organization</p>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {menuItems.map((item) => (
-              <Card 
-                key={item.path} 
-                className="hover:shadow-dashboard-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+        <Card className="p-8">
+          <div className="space-y-1">
+            {menuItems.map((item, index) => (
+              <button
+                key={item.path}
                 onClick={() => navigate(item.path)}
+                className="w-full flex items-center gap-4 p-4 rounded-lg hover:bg-surface-hover transition-colors duration-200 group text-left"
               >
-                <CardHeader>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-3 rounded-dashboard bg-surface">
-                      <item.icon className={`w-6 h-6 ${item.color}`} />
-                    </div>
-                  </div>
-                  <CardTitle className="text-xl">{item.title}</CardTitle>
-                  <CardDescription className="text-text-secondary">
+                <div className={`p-2 rounded-lg bg-surface-hover group-hover:bg-surface ${item.color}`}>
+                  <item.icon className="w-5 h-5" />
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-semibold text-text-primary group-hover:text-primary transition-colors">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-text-secondary mt-0.5 line-clamp-1">
                     {item.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button className="w-full" variant="outline">
-                    Open
-                  </Button>
-                </CardContent>
-              </Card>
+                  </p>
+                </div>
+                
+                <div className="text-text-muted group-hover:text-primary transition-colors">
+                  <svg 
+                    className="w-5 h-5" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M9 5l7 7-7 7" 
+                    />
+                  </svg>
+                </div>
+              </button>
             ))}
+          </div>
+        </Card>
+
+        <div className="mt-8 text-center">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/')}
+              className="gap-2"
+            >
+              <svg 
+                className="w-4 h-4" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18" 
+                />
+              </svg>
+              Back to Home
+            </Button>
           </div>
         </div>
       </main>

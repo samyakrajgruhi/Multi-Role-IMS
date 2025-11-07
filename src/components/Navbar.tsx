@@ -116,6 +116,9 @@ const Navbar = () => {
                       <Link to="/payment" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium py-2 px-4 hover:bg-surface-hover rounded-dashboard">
                         Payment
                       </Link>
+                      <Link to="/my-payments" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium py-2 px-4 hover:bg-surface-hover rounded-dashboard">
+                        My Payments
+                      </Link>
                     </>
                   ) : (
                     <Link to="/login" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium py-2 px-4 hover:bg-surface-hover rounded-dashboard">
