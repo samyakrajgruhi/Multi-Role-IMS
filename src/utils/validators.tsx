@@ -29,20 +29,25 @@ export const validatePhoneNumber = (phone: string): ValidationResult => {
  * Validate PF number (exactly 11 digits)
  */
 export const validatePfNumber = (pfNumber: string): ValidationResult => {
-  // Remove any spaces or special characters
-  const cleanedPf = pfNumber.replace(/\D/g, '');
+  // Remove any spaces but keep the original case
+  const cleanedPf = pfNumber.replace(/\s/g, '');
   
   if (cleanedPf.length === 0) {
     return { isValid: false, error: 'PF number is required' };
   }
   
   if (cleanedPf.length !== 11) {
-    return { isValid: false, error: 'PF number must be exactly 11 digits' };
+    return { isValid: false, error: 'PF number must be exactly 11 characters' };
+  }
+  
+  // Check if it contains only alphanumeric characters (both cases)
+  const isAlphanumeric = /^[A-Za-z0-9]+$/.test(cleanedPf);
+  if (!isAlphanumeric) {
+    return { isValid: false, error: 'PF number can only contain letters and numbers' };
   }
   
   return { isValid: true };
 };
-
 /**
  * Validate password
  * - At least 8 characters long

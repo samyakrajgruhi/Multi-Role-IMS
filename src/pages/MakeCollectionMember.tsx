@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, UserPlus, Upload, X, Eye, UserMinus, Search } from 'lucide-react';
+import { ArrowLeft, UserPlus, Upload, X, Eye, UserMinus, Search, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { firestore, storage } from '@/firebase';
@@ -355,9 +355,10 @@ const MakeCollectionMember = () => {
                 <Input
                   placeholder="Enter SFA ID (e.g., SFA1001)"
                   value={sfaId}
-                  onChange={(e) => setSfaId(e.target.value)}
+                  onChange={(e) => setSfaId(e.target.value.replace(/\s/g, '').toUpperCase())}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   className="flex-1"
+                  style={{ textTransform: 'uppercase' }}
                 />
                 <Button 
                   onClick={handleSearch}
@@ -378,88 +379,140 @@ const MakeCollectionMember = () => {
               </div>
 
               {memberInfo && !memberInfo.isCollectionMember && (
-                <div className="space-y-6 pt-6 border-t border-border">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-text-secondary">Name</p>
-                      <p className="text-lg font-semibold">{memberInfo.full_name}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-text-secondary">SFA ID</p>
-                      <p className="text-lg font-semibold text-primary">{memberInfo.sfa_id}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-text-secondary">CMS ID</p>
-                      <p className="text-lg font-semibold">{memberInfo.cms_id}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-text-secondary">Lobby</p>
-                      <p className="text-lg font-semibold">{memberInfo.lobby_id}</p>
-                    </div>
-                  </div>
+  <div className="space-y-6 pt-6 border-t border-border">
+    {/* Member Information Card */}
+    <div className="bg-surface rounded-lg border border-border p-6">
+      <h3 className="text-lg font-semibold text-text-primary mb-4 pb-2 border-b border-border">
+        Member Information
+      </h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <p className="text-xs text-text-secondary">Full Name</p>
+          <p className="text-base font-semibold text-text-primary">{memberInfo.full_name}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-xs text-text-secondary">SFA ID</p>
+          <p className="text-base font-semibold text-primary">{memberInfo.sfa_id}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-xs text-text-secondary">CMS ID</p>
+          <p className="text-base font-semibold text-accent">{memberInfo.cms_id}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-xs text-text-secondary">Lobby</p>
+          <p className="text-base font-semibold text-text-primary">{memberInfo.lobby_id}</p>
+        </div>
+      </div>
+    </div>
 
-                  {/* QR Upload */}
-                  <div className="space-y-2">
-                    <Label htmlFor="qr-upload" className="text-base font-semibold">
-                      UPI QR Code <span className="text-destructive">*</span>
-                    </Label>
-                    
-                    {!qrPreview ? (
-                      <div className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:bg-surface transition-colors">
-                        <input
-                          id="qr-upload"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleQrFileChange}
-                          className="hidden"
-                        />
-                        <label htmlFor="qr-upload" className="cursor-pointer flex flex-col items-center">
-                          <Upload className="h-10 w-10 text-text-muted mb-3" />
-                          <p className="text-text-primary font-medium mb-1">Click to upload QR code</p>
-                          <p className="text-xs text-text-muted">PNG, JPG (Max 5MB)</p>
-                        </label>
-                      </div>
-                    ) : (
-                      <div className="relative border border-border rounded-lg p-4">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-2 right-2 bg-background hover:bg-destructive hover:text-white"
-                          onClick={handleRemoveQr}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                        <div className="flex flex-col items-center">
-                          <img 
-                            src={qrPreview} 
-                            alt="QR Preview" 
-                            className="w-64 h-64 object-contain border border-border rounded-lg"
-                          />
-                          <p className="text-sm text-text-secondary mt-3">{qrFile?.name}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+    {/* QR Upload Section */}
+    <div className="space-y-4">
+      <div>
+        <Label className="text-base font-semibold text-text-primary mb-2 block">
+          Upload UPI QR Code <span className="text-destructive">*</span>
+        </Label>
+        <p className="text-sm text-text-secondary mb-4">
+          Upload the member's UPI QR code for payment collection
+        </p>
+      </div>
 
-                  <Button 
-                    onClick={handleMakeCollectionMember}
-                    disabled={isUploading || !qrFile}
-                    className="w-full"
-                  >
-                    {isUploading ? (
-                      <>
-                        <span className="animate-spin h-4 w-4 mr-2 rounded-full border-2 border-white border-t-transparent"></span>
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Make Collection Member
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
+      <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:bg-surface transition-colors cursor-pointer"
+           onClick={() => !qrPreview && document.getElementById('qr-upload')?.click()}>
+        <input
+          id="qr-upload"
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleQrFileChange}
+        />
+        
+        {!qrPreview ? (
+          <div className="space-y-3">
+            <div className="w-16 h-16 mx-auto bg-surface-hover rounded-full flex items-center justify-center">
+              <Upload className="w-8 h-8 text-text-muted" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-text-primary mb-1">
+                Click to upload QR code
+              </p>
+              <p className="text-xs text-text-secondary">
+                PNG, JPG or JPEG (max 5MB)
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="relative inline-block">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute -top-2 -right-2 bg-background hover:bg-destructive hover:text-white rounded-full w-8 h-8 p-0 z-10 shadow-lg"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRemoveQr();
+              }}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+            <div className="flex flex-col items-center gap-3">
+              <img 
+                src={qrPreview} 
+                alt="QR Preview" 
+                className="w-64 h-64 object-contain border-2 border-border rounded-lg bg-white"
+              />
+              <div className="text-center">
+                <p className="text-sm font-medium text-text-primary">{qrFile?.name}</p>
+                <p className="text-xs text-text-secondary mt-1">
+                  {qrFile && (qrFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Submit Button */}
+      <Button 
+        onClick={handleMakeCollectionMember}
+        disabled={isUploading || !qrFile}
+        className="w-full py-6"
+        size="lg"
+      >
+        {isUploading ? (
+          <>
+            <span className="animate-spin h-5 w-5 mr-2 rounded-full border-2 border-white border-t-transparent"></span>
+            Processing...
+          </>
+        ) : (
+          <>
+            <UserPlus className="w-5 h-5 mr-2" />
+            Make Collection Member
+          </>
+        )}
+      </Button>
+
+      {!qrFile && (
+        <p className="text-sm text-warning text-center">
+          Please upload a QR code before proceeding
+        </p>
+      )}
+    </div>
+  </div>
+)}
+
+{/* Already Collection Member Warning */}
+{memberInfo && memberInfo.isCollectionMember && (
+  <div className="p-6 bg-warning-light border-2 border-warning rounded-lg">
+    <div className="flex items-start gap-3">
+      <AlertCircle className="w-5 h-5 text-warning mt-0.5 flex-shrink-0" />
+      <div>
+        <p className="font-semibold text-warning mb-1">Already a Collection Member</p>
+        <p className="text-sm text-text-secondary">
+          <span className="font-medium">{memberInfo.full_name}</span> ({memberInfo.sfa_id}) is already assigned as a collection member.
+        </p>
+      </div>
+    </div>
+  </div>
+)}
             </CardContent>
           </Card>
 

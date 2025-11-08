@@ -85,6 +85,9 @@ const Login = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [showResetForm, setShowResetForm] = useState(false);
 
+  const [sfaIdValid, setSfaIdValid] = useState(false);
+  const [cmsIdValid, setCmsIdValid] = useState(false);
+
   useEffect(() => {
     const checkRegistrationStatus = async () => {
       try{
@@ -159,8 +162,11 @@ const Login = () => {
 
   // ✅ 2. PF Number Validation
   const handlePfNumberChange = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    const limited = cleaned.slice(0, 11);
+    // Remove spaces but keep original case, allow alphanumeric (both cases)
+    const cleaned = value.replace(/\s/g, '');
+    // Only allow alphanumeric characters (A-Z, a-z, 0-9)
+    const alphanumeric = cleaned.replace(/[^A-Za-z0-9]/g, '');
+    const limited = alphanumeric.slice(0, 11);
     setPfNumber(limited);
     
     const validation = validatePfNumber(limited);
@@ -178,6 +184,60 @@ const Login = () => {
     setPasswordStrength(strength.strength);
   };
 
+  const validateSfaIdFormat = (sfaId: string): { isValid: boolean; error?: string } => {
+    // Check for spaces
+    if (/\s/.test(sfaId)) {
+      return { isValid: false, error: 'SFA ID cannot contain spaces' };
+    }
+    
+    if (!sfaId.startsWith('SFA')) {
+      return { isValid: false, error: 'SFA ID must start with "SFA"' };
+    }
+    
+    if (sfaId.length < 7) {
+      return { isValid: false, error: 'SFA ID must be at least 7 characters (e.g., SFA1001)' };
+    }
+    
+    // Only allow alphanumeric characters after SFA
+    if (!/^SFA[0-9]+$/.test(sfaId)) {
+      return { isValid: false, error: 'SFA ID must be in format: SFA followed by numbers (e.g., SFA1001)' };
+    }
+    
+    return { isValid: true };
+  };
+
+  const validateCmsIdFormat = (cmsId: string, lobbyId: string): { isValid: boolean; error?: string } => {
+    if (!lobbyId) {
+      return { isValid: false, error: 'Please select a lobby first' };
+    }
+    
+    // Check for spaces
+    if (/\s/.test(cmsId)) {
+      return { isValid: false, error: 'CMS ID cannot contain spaces' };
+    }
+    
+    // Check if CMS ID starts with the lobby prefix
+    if (!cmsId.startsWith(lobbyId)) {
+      return { isValid: false, error: `CMS ID must start with "${lobbyId}"` };
+    }
+    
+    // Check if there are digits after the lobby prefix
+    const numberPart = cmsId.substring(lobbyId.length);
+    if (numberPart.length === 0) {
+      return { isValid: false, error: 'CMS ID must include a number after lobby code' };
+    }
+    
+    if (!/^\d+$/.test(numberPart)) {
+      return { isValid: false, error: 'CMS ID must end with numbers only' };
+    }
+    
+    if (cmsId.length < lobbyId.length + 3) {
+      return { isValid: false, error: `CMS ID must be at least ${lobbyId.length + 3} characters (e.g., ${lobbyId}1234)` };
+    }
+    
+    return { isValid: true };
+  };
+
   // ✅ Check if form is valid
   const isFormValid = () => {
     // Check required fields
@@ -186,12 +246,22 @@ const Login = () => {
       return false;
     }
 
+    // ✅ Check CMS ID format with lobby
+    if (!cmsIdValid || !validateCmsIdFormat(cmsId, lobbyId).isValid) {
+      return false;
+    }
+
     // Check SFA ID
     if (!autoGenerateSfaId && !sfaId) {
       return false;
     }
 
-    // ✅ Check 3 validators
+    // ✅ Check SFA ID format if not auto-generating
+    if (!autoGenerateSfaId && !sfaIdValid) {
+      return false;
+    }
+
+    // Check 3 validators
     if (!phoneValid || !pfValid || !passwordValid) {
       return false;
     }
@@ -202,30 +272,81 @@ const Login = () => {
       return false;
     }
 
-    // Check password match
+    // Password match check
     if (regPassword !== regConfirmPassword) {
       return false;
     }
 
-    // Check nominees
-    const hasEmptyNominee = nominees.some(n => !n.name || !n.relationship || !n.phoneNumber || !n.sharePercentage);
-    if (hasEmptyNominee) {
-      return false;
-    }
+    // Nominee validation
+    const nomineeValid = nominees.every(nominee => 
+      nominee.name.trim() !== '' &&
+      nominee.relationship.trim() !== '' &&
+      nominee.phoneNumber.trim() !== '' &&
+      nominee.sharePercentage > 0
+    );
 
-    // Check nominee phone numbers
-    for (const nominee of nominees) {
-      if (!validatePhoneNumber(nominee.phoneNumber).isValid) {
-        return false;
-      }
-    }
-
-    // Check total share
-    if (getTotalSharePercentage() !== 100) {
+    if (!nomineeValid) {
       return false;
     }
 
     return true;
+  };
+
+  const handleLobbyChange = (value: string) => {
+    const oldLobby = lobbyId;
+    setLobbyId(value);
+    
+    // If CMS ID was already entered, update it with new lobby prefix
+    if (cmsId && oldLobby) {
+      const numberPart = cmsId.substring(oldLobby.length);
+      const newCmsId = value + numberPart;
+      setCmsId(newCmsId);
+      
+      const validation = validateCmsIdFormat(newCmsId, value);
+      setCmsIdValid(validation.isValid);
+    }
+  };
+
+  // Update handleSfaIdChange function (around line 283)
+  const handleSfaIdChange = (value: string) => {
+    // Remove all spaces and convert to uppercase
+    const cleanedValue = value.replace(/\s/g, '').toUpperCase();
+    setSfaId(cleanedValue);
+    
+    if (!autoGenerateSfaId) {
+      const validation = validateSfaIdFormat(cleanedValue);
+      setSfaIdValid(validation.isValid);
+    }
+  };
+
+  const handleCmsIdChange = (value: string) => {
+    // If lobby is not selected, show error
+    if (!lobbyId) {
+      toast({
+        title: 'Select Lobby First',
+        description: 'Please select your lobby before entering CMS ID',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Remove all spaces and convert to uppercase
+    let processedValue = value.replace(/\s/g, '').toUpperCase();
+    
+    // If user tries to type the lobby prefix, remove it (we'll add it automatically)
+    if (processedValue.startsWith(lobbyId)) {
+      processedValue = processedValue.substring(lobbyId.length);
+    }
+    
+    // Only allow numbers
+    const numbersOnly = processedValue.replace(/\D/g, '');
+    
+    // Construct full CMS ID with lobby prefix
+    const fullCmsId = lobbyId + numbersOnly;
+    setCmsId(fullCmsId);
+    
+    const validation = validateCmsIdFormat(fullCmsId, lobbyId);
+    setCmsIdValid(validation.isValid);
   };
 
   function clearFields() {
@@ -249,14 +370,18 @@ const Login = () => {
     setPhoneValid(false);
     setPfValid(false);
     setPasswordValid(false);
+    setSfaIdValid(false);  // ✅ Add this
+    setCmsIdValid(false);
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if(isSubmitting) {
+    // Prevent multiple submissions
+    if (isSubmitting) {
       return;
     }
+    
     if(!isLogin){
       // ✅ Final validation check
       if (!isFormValid()) {
@@ -265,6 +390,30 @@ const Login = () => {
           description: "Please fill all required fields correctly",
           variant: "destructive"
         });
+        return;
+      }
+
+      // ✅ Additional format validation for SFA and CMS IDs
+      if (!autoGenerateSfaId) {
+        const sfaValidation = validateSfaIdFormat(sfaId);
+        if (!sfaValidation.isValid) {
+          toast({
+            title: "Invalid SFA ID",
+            description: sfaValidation.error,
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
+      const cmsValidation = validateCmsIdFormat(cmsId, lobbyId);
+      if (!cmsValidation.isValid) {
+        toast({
+          title: "Invalid CMS ID",
+          description: cmsValidation.error,
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
         return;
       }
 
@@ -631,20 +780,21 @@ const Login = () => {
               {/* ✅ 1. PF Number - 11 digits */}
               <div>
                 <label className="block text-sm font-medium mb-1" htmlFor="pfNumber">
-                  PF Number (11 digits) <span className="text-red-600">*</span>
+                  PF Number (11 characters) <span className="text-red-600">*</span>
                 </label>
                 <Input
                   id="pfNumber"
-                  type="tel"
+                  type="text"
                   required
-                  placeholder="Enter 11-digit PF number"
+                  placeholder="Enter 11-character PF number (e.g., PF12345A6789)"
                   className={`h-11 ${pfNumber && (pfValid ? 'border-success' : 'border-destructive')}`}
                   value={pfNumber}
                   onChange={e => handlePfNumberChange(e.target.value)}
                   maxLength={11}
+                  // ✅ Removed textTransform: 'uppercase' to allow both cases
                 />
                 <p className="text-xs text-text-muted mt-1 flex items-center justify-between">
-                  <span>{pfNumber.length}/11 digits</span>
+                  <span>{pfNumber.length}/11 characters</span>
                   {pfNumber.length === 11 && (
                     pfValid ? (
                       <span className="text-success flex items-center gap-1">
@@ -657,6 +807,11 @@ const Login = () => {
                     )
                   )}
                 </p>
+                {pfNumber && pfNumber.length === 11 && !pfValid && (
+                  <p className="text-xs text-destructive mt-1">
+                    PF number must be exactly 11 alphanumeric characters
+                  </p>
+                )}
               </div>
 
               {/* Present Status */}
@@ -697,11 +852,16 @@ const Login = () => {
               {/* Lobby */}
               <div>
                 <label className="block text-sm font-medium mb-1" htmlFor="lobbyId">
-                  Lobby ID <span className="text-red-600">*</span>
+                  Lobby <span className="text-red-600">*</span>
                 </label>
-                <Select value={lobbyId} onValueChange={setLobbyId} disabled={isLoadingLobbies} required>
+                <Select 
+                  value={lobbyId} 
+                  onValueChange={handleLobbyChange} 
+                  disabled={isLoadingLobbies} 
+                  required
+                >
                   <SelectTrigger className="w-full h-11">
-                    <SelectValue placeholder={isLoadingLobbies ? "Loading lobbies..." : "Select your lobby"} />
+                    <SelectValue placeholder={isLoadingLobbies ? "Loading lobbies..." : "Select your lobby first"} />
                   </SelectTrigger>
                   <SelectContent className="bg-surface border border-border z-50">
                     {lobbies.map((lobby) => (
@@ -713,20 +873,48 @@ const Login = () => {
                 </Select>
               </div>
 
-              {/* CMS ID */}
               <div>
                 <label className="block text-sm font-medium mb-1" htmlFor="cmsId">
                   CMS ID <span className="text-red-600">*</span>
                 </label>
-                <Input
-                  id="cmsId"
-                  type="text"
-                  required
-                  placeholder="Enter your CMS ID"
-                  className="h-11"
-                  value={cmsId}
-                  onChange={e => setCmsId(e.target.value.toUpperCase())}
-                />
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary font-medium">
+                    {lobbyId || 'LOBBY'}
+                  </div>
+                  <Input
+                    id="cmsId"
+                    type="text"
+                    required
+                    placeholder={lobbyId ? "Enter number (e.g., 1234)" : "Select lobby first"}
+                    className={`h-11 pl-20 ${cmsId && (cmsIdValid ? 'border-success' : 'border-destructive')}`}
+                    value={cmsId.substring(lobbyId.length)}
+                    onChange={e => handleCmsIdChange(e.target.value)}
+                    disabled={!lobbyId}
+                    maxLength={6}
+                  />
+                </div>
+                {lobbyId && (
+                  <p className="text-xs text-text-muted mt-1">
+                    Your CMS ID will be: <span className="font-semibold text-primary">{cmsId || `${lobbyId}____`}</span>
+                  </p>
+                )}
+                {!lobbyId && (
+                  <p className="text-xs text-warning mt-1">
+                    ⚠️ Please select your lobby first
+                  </p>
+                )}
+                {cmsId && lobbyId && !cmsIdValid && (
+                  <div className="mt-1 flex items-center gap-1 text-xs text-destructive">
+                    <AlertCircle className="w-3 h-3" />
+                    <span>Enter at least 3 digits after {lobbyId}</span>
+                  </div>
+                )}
+                {cmsId && cmsIdValid && (
+                  <div className="mt-1 flex items-center gap-1 text-xs text-success">
+                    <CheckCircle className="w-3 h-3" />
+                    <span>Valid CMS ID format</span>
+                  </div>
+                )}
               </div>
 
               {/* SFA ID */}
@@ -750,14 +938,29 @@ const Login = () => {
                 </div>
 
                 {!autoGenerateSfaId ? (
-                  <Input
-                    id="sfaId"
-                    type="text"
-                    placeholder="Enter your SFA ID"
-                    className="h-11"
-                    value={sfaId}
-                    onChange={e => setSfaId(e.target.value.toUpperCase())}
-                  />
+                  <div>
+                    <Input
+                      id="sfaId"
+                      type="text"
+                      placeholder="Enter your SFA ID (e.g., SFA1001)"
+                      className={`h-11 ${sfaId && (sfaIdValid ? 'border-success' : 'border-destructive')}`}
+                      value={sfaId}
+                      onChange={e => handleSfaIdChange(e.target.value)}
+                      style={{ textTransform: 'uppercase' }}
+                    />
+                    {sfaId && !sfaIdValid && (
+                      <div className="mt-1 flex items-center gap-1 text-xs text-destructive">
+                        <AlertCircle className="w-3 h-3" />
+                        <span>SFA ID must start with "SFA" (e.g., SFA1001)</span>
+                      </div>
+                    )}
+                    {sfaId && sfaIdValid && (
+                      <div className="mt-1 flex items-center gap-1 text-xs text-success">
+                        <CheckCircle className="w-3 h-3" />
+                        <span>Valid SFA ID format</span>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div className="h-11 px-3 py-2 bg-surface border border-border rounded-md flex items-center">
                     <span className="text-text-muted text-sm">

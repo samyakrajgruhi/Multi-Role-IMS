@@ -283,9 +283,10 @@ const DeleteUser = () => {
                 <Input
                   placeholder="Enter SFA ID or CMS ID (e.g., SFA1001 or CMS12345)"
                   value={searchId}
-                  onChange={(e) => setSearchId(e.target.value)}
+                  onChange={(e) => setSearchId(e.target.value.replace(/\s/g, '').toUpperCase())}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   className="flex-1"
+                  style={{ textTransform: 'uppercase' }}
                 />
                 <Button 
                   onClick={handleSearch}

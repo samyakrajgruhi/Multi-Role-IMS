@@ -66,13 +66,6 @@ const AdminMenu = () => {
       color: 'text-success'
     },
     {
-      title: 'CSV Import',
-      description: 'Add Donation Data by importing .csv File',
-      icon: FileUp,
-      path:'/admin/csv-import',
-      color: 'text-primary'
-    },
-    {
       title: 'Delete User',
       description: 'Remove user accounts from the system (preserves transaction data)',
       icon: UserX,
