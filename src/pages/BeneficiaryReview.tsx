@@ -22,6 +22,14 @@ import {
   getApprovalHistory,
   BeneficiaryApproval
 } from '@/services/beneficiaryService';
+import {Timestamp} from 'firebase/firestore';
+
+const toDate = (timestamp: Date | Timestamp): Date => {
+  if (timestamp instanceof Date) {
+    return timestamp;
+  }
+  return timestamp.toDate();
+};
 
 const BeneficiaryReview = () => {
   const { user, isLoading } = useAuth();
@@ -97,7 +105,7 @@ const BeneficiaryReview = () => {
       if (selectedRequest?.id === requestId) {
         setSelectedRequest(null);
       }
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Approval Failed',
         description: error.message || 'Failed to approve request',
@@ -128,7 +136,7 @@ const BeneficiaryReview = () => {
       if (selectedRequest?.id === requestId) {
         setSelectedRequest(null);
       }
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Rejection Failed',
         description: error.message || 'Failed to reject request',
@@ -301,7 +309,7 @@ const BeneficiaryReview = () => {
                         <div>
                           <p className="text-xs text-text-secondary">Date</p>
                           <p className="text-sm font-medium text-text-primary">
-                            {new Date(request.createdAt).toLocaleDateString()}
+                            {toDate(request.createdAt).toLocaleDateString()}
                           </p>
                         </div>
                         <div>
@@ -453,7 +461,7 @@ const BeneficiaryReview = () => {
                     <Calendar className="h-4 w-4" /> Submission Date
                   </p>
                   <p className="font-semibold text-text-primary">
-                    {new Date(selectedRequest.createdAt).toLocaleDateString('en-IN', {
+                    {toDate(selectedRequest.createdAt).toLocaleDateString('en-IN', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
@@ -463,7 +471,7 @@ const BeneficiaryReview = () => {
                 <div>
                   <p className="text-xs sm:text-sm text-text-secondary mb-1">Last Updated</p>
                   <p className="font-semibold text-text-primary">
-                    {new Date(selectedRequest.updatedAt).toLocaleDateString('en-IN', {
+                    {toDate(selectedRequest.updatedAt).toLocaleDateString('en-IN', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
@@ -556,7 +564,7 @@ const BeneficiaryReview = () => {
                             {approval.action}
                           </Badge>
                           <p className="text-xs text-text-secondary mt-1">
-                            {new Date(approval.timestamp).toLocaleDateString()}
+                            {toDate(approval.timestamp).toLocaleDateString()}
                           </p>
                         </div>
                       </div>

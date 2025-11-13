@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {Timestamp} from 'firebase/firestore';
 
 const BeneficiaryRequest = () => {
   const { user } = useAuth();
@@ -32,13 +33,19 @@ const BeneficiaryRequest = () => {
   const [pastRequests, setPastRequests] = useState<BeneficiaryRequestType[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<BeneficiaryRequestType | null>(null);
 
-  // ✅ UPDATED: Form state
   const [formData, setFormData] = useState({
     verificationDoc: null as File | null,
     paySlip: null as File | null,
-    applicationForm: null as File | null,  // ✅ NEW
+    applicationForm: null as File | null, 
     description: ''
   });
+
+  const toDate = (timestamp: Date | Timestamp): Date => {
+  if (timestamp instanceof Date) {
+    return timestamp;
+  }
+  return timestamp.toDate();
+};
 
   // Fetch user's past requests
   useEffect(() => {
@@ -248,7 +255,7 @@ const BeneficiaryRequest = () => {
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-text-primary mb-1 truncate">{request.userName}</h3>
                             <p className="text-sm text-text-secondary">
-                              Submitted: {new Date(request.createdAt).toLocaleDateString()}
+                              Submitted: {toDate(request.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
@@ -458,7 +465,7 @@ const BeneficiaryRequest = () => {
                 <div>
                   <p className="text-xs text-text-secondary mb-1">Submitted On</p>
                   <p className="text-sm text-text-primary">
-                    {new Date(selectedRequest.createdAt).toLocaleDateString('en-IN', {
+                    {toDate(selectedRequest.createdAt).toLocaleDateString('en-IN', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
@@ -468,7 +475,7 @@ const BeneficiaryRequest = () => {
                 <div>
                   <p className="text-xs text-text-secondary mb-1">Last Updated</p>
                   <p className="text-sm text-text-primary">
-                    {new Date(selectedRequest.updatedAt).toLocaleDateString('en-IN', {
+                    {toDate(selectedRequest.updatedAt).toLocaleDateString('en-IN', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'

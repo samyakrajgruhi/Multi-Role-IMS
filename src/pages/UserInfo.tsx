@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Edit, Save, X, User, Upload, Eye, EyeOff } from 'lucide-react';
+import { Edit, Save, X, User, Upload, Eye, EyeOff, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { doc, updateDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
@@ -212,6 +212,90 @@ const UserInfo = () => {
     setEditedInfo(prev => ({ ...prev, [field]: value }));
   };
 
+  // Nominee management functions
+  const addNominee = () => {
+    if (editedInfo.nominees.length >= 5) {
+      toast({
+        title: "Limit Reached",
+        description: "You can add maximum 5 nominees",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setEditedInfo({
+      ...editedInfo,
+      nominees: [
+        ...editedInfo.nominees,
+        { name: "", relationship: "", phoneNumber: "", sharePercentage: 0 }
+      ]
+    });
+  };
+
+  const removeNominee = (index: number) => {
+    if (editedInfo.nominees.length <= 1) {
+      toast({
+        title: "Cannot Remove",
+        description: "At least one nominee is required",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setEditedInfo({
+      ...editedInfo,
+      nominees: editedInfo.nominees.filter((_, i) => i !== index)
+    });
+  };
+
+  const updateNominee = (index: number, field: keyof Nominee, value: string | number) => {
+    const updatedNominees = [...editedInfo.nominees];
+    updatedNominees[index] = {
+      ...updatedNominees[index],
+      [field]: value
+    };
+    setEditedInfo({
+      ...editedInfo,
+      nominees: updatedNominees
+    });
+  };
+
+  const validateNominees = () => {
+    const totalShare = editedInfo.nominees.reduce((sum, n) => sum + Number(n.sharePercentage), 0);
+    
+    if (totalShare !== 100) {
+      toast({
+        title: "Invalid Share Distribution",
+        description: `Total share must be 100%. Current total: ${totalShare}%`,
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    for (let i = 0; i < editedInfo.nominees.length; i++) {
+      const nominee = editedInfo.nominees[i];
+      if (!nominee.name || !nominee.relationship || !nominee.phoneNumber) {
+        toast({
+          title: "Incomplete Nominee Information",
+          description: `Nominee ${i + 1} has missing required fields`,
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      if (nominee.phoneNumber.length !== 10) {
+        toast({
+          title: "Invalid Phone Number",
+          description: `Nominee ${i + 1} phone number must be 10 digits`,
+          variant: "destructive"
+        });
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   // Update the handleSaveChanges function
 
   const handleSaveChanges = async () => {
@@ -222,6 +306,11 @@ const UserInfo = () => {
         description: "Cannot update profile - user data not loaded properly",
         variant: "destructive"
       });
+      return;
+    }
+
+    // Validate nominees before saving
+    if (!validateNominees()) {
       return;
     }
 
@@ -256,6 +345,7 @@ const UserInfo = () => {
         blood_group: editedInfo.bloodGroup,
         present_status: editedInfo.presentStatus,
         pf_number: editedInfo.pfNumber,
+        nominees: editedInfo.nominees,
         updatedAt: new Date()
       };
 
@@ -647,28 +737,130 @@ const UserInfo = () => {
 
               {/* Nominees Section */}
               <div className="space-y-3 sm:space-y-4">
-                {userInfo.nominees.map((nominee, index) => (
+                <div className="flex items-center justify-between">
+                  <Label className="text-base sm:text-lg font-semibold">
+                    Nominee Details <span className="text-destructive">*</span>
+                  </Label>
+                  {isEditing && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addNominee}
+                      disabled={editedInfo.nominees.length >= 5}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add Nominee
+                    </Button>
+                  )}
+                </div>
+
+                {(isEditing ? editedInfo.nominees : userInfo.nominees).map((nominee, index) => (
                   <div key={index} className="p-3 sm:p-4 bg-surface rounded-dashboard border border-border">
+                    <div className="flex items-center justify-between mb-3">
+                      <h5 className="font-semibold text-text-primary">Nominee {index + 1}</h5>
+                      <div className="flex items-center gap-2">
+                        {!isEditing && (
+                          <span className="px-2 py-1 bg-primary-light text-primary rounded-dashboard-sm text-xs font-semibold">
+                            {nominee.sharePercentage}% Share
+                          </span>
+                        )}
+                        {isEditing && (isEditing ? editedInfo.nominees : userInfo.nominees).length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeNominee(index)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div>
                         <Label className="text-xs text-text-secondary">Name</Label>
-                        <p className="text-sm text-text-primary font-medium break-words">{nominee.name}</p>
+                        {isEditing ? (
+                          <Input
+                            value={nominee.name}
+                            onChange={(e) => updateNominee(index, 'name', e.target.value)}
+                            placeholder="Nominee name"
+                            className="mt-1"
+                          />
+                        ) : (
+                          <p className="text-sm text-text-primary font-medium break-words">{nominee.name}</p>
+                        )}
                       </div>
                       <div>
                         <Label className="text-xs text-text-secondary">Relationship</Label>
-                        <p className="text-sm text-text-primary">{nominee.relationship}</p>
+                        {isEditing ? (
+                          <Input
+                            value={nominee.relationship}
+                            onChange={(e) => updateNominee(index, 'relationship', e.target.value)}
+                            placeholder="e.g., Spouse, Child"
+                            className="mt-1"
+                          />
+                        ) : (
+                          <p className="text-sm text-text-primary">{nominee.relationship}</p>
+                        )}
                       </div>
                       <div>
                         <Label className="text-xs text-text-secondary">Phone Number</Label>
-                        <p className="text-sm text-text-primary font-mono">{nominee.phoneNumber}</p>
+                        {isEditing ? (
+                          <Input
+                            value={nominee.phoneNumber}
+                            onChange={(e) => updateNominee(index, 'phoneNumber', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                            placeholder="10-digit phone number"
+                            maxLength={10}
+                            className="mt-1"
+                          />
+                        ) : (
+                          <p className="text-sm text-text-primary font-mono">{nominee.phoneNumber}</p>
+                        )}
                       </div>
                       <div>
                         <Label className="text-xs text-text-secondary">Share Percentage</Label>
-                        <p className="text-sm text-text-primary font-semibold">{nominee.sharePercentage}%</p>
+                        {isEditing ? (
+                          <Input
+                            type="number"
+                            value={nominee.sharePercentage}
+                            onChange={(e) => updateNominee(index, 'sharePercentage', Math.min(100, Math.max(0, Number(e.target.value))))}
+                            placeholder="Share %"
+                            min={0}
+                            max={100}
+                            className="mt-1"
+                          />
+                        ) : (
+                          <p className="text-sm text-text-primary font-semibold">{nominee.sharePercentage}%</p>
+                        )}
                       </div>
                     </div>
                   </div>
                 ))}
+
+                {/* Total Share Indicator */}
+                {isEditing && (
+                  <div className={`p-3 rounded-lg border ${
+                    editedInfo.nominees.reduce((sum, n) => sum + Number(n.sharePercentage), 0) === 100
+                      ? 'bg-green-50 border-green-500'
+                      : 'bg-yellow-50 border-yellow-500'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Total Share Allocated</span>
+                      <span className="text-lg font-bold">
+                        {editedInfo.nominees.reduce((sum, n) => sum + Number(n.sharePercentage), 0)}%
+                      </span>
+                    </div>
+                    {editedInfo.nominees.reduce((sum, n) => sum + Number(n.sharePercentage), 0) !== 100 && (
+                      <p className="text-xs mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        Total must equal 100%
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 

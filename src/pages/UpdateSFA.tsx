@@ -33,7 +33,7 @@ interface UserInfo {
   lobby_id: string;
   email: string;
   uid: string;
-  [key: string]: string | boolean | integer;
+  [key: string]: string | boolean | number;
 }
 
 const UpdateSFA = () => {

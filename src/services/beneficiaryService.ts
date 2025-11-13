@@ -9,7 +9,8 @@ import {
   orderBy,
   getDoc,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  UpdateData
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { firestore, storage } from '@/firebase';
@@ -66,7 +67,7 @@ export const createBeneficiaryRequest = async (
   requestData: Omit<BeneficiaryRequest, 'id' | 'createdAt' | 'updatedAt' | 'approvalCount' | 'totalApprovals' | 'status'>,
   verificationDoc: File,
   paySlip: File,
-  applicationForm: File  // ✅ NEW
+  applicationForm: File  
 ): Promise<string> => {
   try {
     // Get total number of admins for approval calculation
@@ -180,7 +181,7 @@ export const processApproval = async (
     });
 
     // Update request document
-    const updates = {
+    const updates: UpdateData<BeneficiaryRequest> = {
       updatedAt: serverTimestamp()
     };
 
