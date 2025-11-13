@@ -54,15 +54,12 @@ const MakeFounder = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [foundUser, setFoundUser] = useState<UserInfo | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  
-  // ✅ NEW: State for founders list
   const [foundersList, setFoundersList] = useState<UserInfo[]>([]);
   const [isLoadingFounders, setIsLoadingFounders] = useState(true);
   const [processingFounder, setProcessingFounder] = useState<string | null>(null);
   const [founderToRevoke, setFounderToRevoke] = useState<UserInfo | null>(null);
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
 
-  // ✅ NEW: Fetch all founders
   useEffect(() => {
     const fetchFounders = async () => {
       if (!isFounder || !isAuthenticated) return;
@@ -423,7 +420,7 @@ const MakeFounder = () => {
             </div>
           </div>
 
-          {/* ✅ NEW: Current Founders List */}
+          {/* Current Founders List */}
           <Card className="p-6 mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -734,7 +731,7 @@ const MakeFounder = () => {
             </AlertDialogContent>
           </AlertDialog>
 
-          {/* ✅ NEW: Revoke Confirmation Dialog from List */}
+          {/* Revoke Confirmation Dialog from List */}
           <AlertDialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
             <AlertDialogContent>
               <AlertDialogHeader>

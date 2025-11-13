@@ -10,7 +10,7 @@ import { doc, getDocs, collection, query, where  } from "firebase/firestore";
 
 
 interface FirestoreUserData {
-  [x: string]: any;
+  [x: string]: string | boolean | number;
   full_name?: string;
   cms_id?: string;
   lobby_id?: string;
@@ -39,7 +39,6 @@ const getUserData = async (userId: string, retries = 3): Promise<FirestoreUserDa
       
       console.warn(`⚠️ Attempt ${attempt + 1}/${retries}: No user document found for uid ${userId}`);
       
-      // Wait before retrying (exponential backoff)
       if (attempt < retries - 1) {
         await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 500));
       }
@@ -83,9 +82,9 @@ interface AuthContextType {
   user: UserData | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  isDataLoaded: boolean; // ✅ NEW: Track if user data is fully loaded
+  isDataLoaded: boolean; 
   logout: () => Promise<void>;
-  refreshUserData: () => Promise<void>; // ✅ NEW: Manual refresh function
+  refreshUserData: () => Promise<void>; 
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -100,7 +99,7 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDataLoaded, setIsDataLoaded] = useState(false); // ✅ NEW
+  const [isDataLoaded, setIsDataLoaded] = useState(false); 
 
   const fetchAndSetUserData = async (firebaseUser: User) => {
   try {
@@ -109,7 +108,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     const userData = await getUserData(firebaseUser.uid);
     
-    // ✅ Check if user is disabled
+    // Check if user is disabled
     if (userData.isDisabled) {
       console.error('⚠️ User account is disabled');
       await firebaseSignOut(auth);

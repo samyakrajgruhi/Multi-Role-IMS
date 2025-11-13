@@ -77,7 +77,7 @@ const MemberList = () => {
   const [selectedMember, setSelectedMember] = useState<MemberData | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
 
-  // ✅ Fetch protected admins from Firestore config
+  // Fetch protected admins from Firestore config
   useEffect(() => {
     const fetchProtectedAdmins = async () => {
       try {
@@ -116,7 +116,7 @@ const MemberList = () => {
         const membersList: MemberData[] = userSnapshot.docs.map(doc => {
           const data = doc.data();
           
-          // ✅ Check if this user is a protected admin
+          // Check if this user is a protected admin
           const isProtectedAdmin = protectedAdmins.includes(data.sfa_id);
           
           return {
@@ -154,7 +154,7 @@ const MemberList = () => {
       }
     };
 
-    // ✅ Only fetch members after protected admins are loaded
+    // Only fetch members after protected admins are loaded
     if (isFounder && isAuthenticated && !isLoadingConfig) {
       fetchMembers();
     }
@@ -184,7 +184,7 @@ const MemberList = () => {
 
   // Handle Admin Toggle
   const handleAdminToggle = async (memberId: string, isCurrentlyAdmin: boolean, sfaId: string, isProtected: boolean) => {
-    // ✅ Check if user is protected
+    // Check if user is protected
     if (isProtected && isCurrentlyAdmin) {
       toast({
         title: "Protected Admin",
@@ -393,7 +393,7 @@ const MemberList = () => {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2 flex-wrap">
-                              {/* ✅ NEW: View Details Button */}
+                              {/* View Details Button */}
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -619,7 +619,7 @@ const MemberList = () => {
                 </div>
               )}
 
-              {/* ✅ NEW: Nominees Section */}
+              {/* Nominees Section */}
               {selectedMember.nominees && selectedMember.nominees.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold text-text-primary mb-3 pb-2 border-b border-border">

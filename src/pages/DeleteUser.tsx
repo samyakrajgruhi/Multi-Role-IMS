@@ -63,7 +63,7 @@ const DeleteUser = () => {
   const [protectedAdmins, setProtectedAdmins] = useState<string[]>([]);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
 
-  // ✅ Fetch protected admins from Firestore config
+  // Fetch protected admins from Firestore config
   useEffect(() => {
     const fetchProtectedAdmins = async () => {
       try {
@@ -131,7 +131,7 @@ const DeleteUser = () => {
       const userDoc = querySnapshot.docs[0];
       const userData = userDoc.data();
       
-      // ✅ Check if user is protected
+      // Check if user is protected
       const isProtected = protectedAdmins.includes(userData.sfa_id);
       
       setFoundUser({
@@ -146,9 +146,9 @@ const DeleteUser = () => {
         isFounder: userData.isFounder || false,
         isCollectionMember: userData.isCollectionMember || false,
         isProtected: isProtected,
-        isDisabled: userData.isDisabled || false, // ✅ NEW
-        disabledAt: userData.disabledAt?.toDate(), // ✅ NEW
-        disabledBy: userData.disabledBy // ✅ NEW
+        isDisabled: userData.isDisabled || false,
+        disabledAt: userData.disabledAt?.toDate(), 
+        disabledBy: userData.disabledBy
       });
 
       if (isProtected) {
@@ -159,7 +159,7 @@ const DeleteUser = () => {
         });
       }
 
-      // ✅ Show warning if already disabled
+      // warning if already disabled
       if (userData.isDisabled) {
         toast({
           title: 'Account Disabled',
@@ -182,7 +182,7 @@ const DeleteUser = () => {
   const handleDeleteUser = async () => {
     if (!foundUser) return;
 
-    // ✅ Check if user is protected or trying to delete self
+    // Check if user is protected or trying to delete self
     if (foundUser.isProtected || foundUser.sfa_id === user?.sfaId) {
       toast({
         title: 'Cannot Delete',

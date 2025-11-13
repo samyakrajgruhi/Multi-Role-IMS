@@ -29,7 +29,7 @@ const TransactionImport: React.FC = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [previewData, setPreviewData] = useState<Record<string, any>[]>([]);
+  const [previewData, setPreviewData] = useState<Record<string>[]>([]);
   const [recordCount, setRecordCount] = useState(0);
   const [importSuccess, setImportSuccess] = useState<boolean | null>(null);
   const [importedCount, setImportedCount] = useState(0);
@@ -67,7 +67,7 @@ const TransactionImport: React.FC = () => {
         
         // Normalize field names for consistent usage
         const normalizedData = parsedData.map(record => {
-          const normalizedRecord: Record<string, any> = {};
+          const normalizedRecord: Record<string> = {};
           
           // Map CSV columns to our expected format
           normalizedRecord.srno = record.srno || '';

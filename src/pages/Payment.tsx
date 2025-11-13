@@ -31,7 +31,7 @@ const Payment = () => {
   const [isLoadingAmounts, setIsLoadingAmounts] = useState(true);
   const navigate = useNavigate();
 
-  // ✅ CRITICAL: Validate user data is fully loaded
+  // CRITICAL: Validate user data is fully loaded
   const isUserDataValid = useCallback(() => {
     return (
       isDataLoaded &&
@@ -44,7 +44,7 @@ const Payment = () => {
     );
   }, [isDataLoaded, user]);
 
-  // ✅ Monitor user data loading
+  // Monitor user data loading
   useEffect(() => {
     if (authLoading || !isDataLoaded) {
       console.log('⏳ Waiting for user data to load...');
@@ -99,7 +99,7 @@ const Payment = () => {
   // Fetch collection members only when user data is valid
   useEffect(() => {
     const fetchCollectionMembers = async () => {
-      // ✅ Don't fetch until user data is fully validated
+      // Don't fetch until user data is fully validated
       if (!isUserDataValid()) {
         console.log('⏳ Skipping collection members fetch - user data not ready');
         setIsLoading(false);
@@ -132,7 +132,7 @@ const Payment = () => {
         console.log('✅ Fetched collection members:', members.length);
         setCollectionMembers(members);
 
-        // ✅ Show info toast if no collection members found
+        // Show info toast if no collection members found
         if (members.length === 0) {
           toast({
             title: "No Collection Members",
@@ -167,7 +167,7 @@ const Payment = () => {
       return;
     }
 
-    // ✅ CRITICAL: Final validation before proceeding
+    // CRITICAL: Final validation before proceeding
     if (!isUserDataValid()) {
       console.error('⚠️ Cannot proceed - invalid user data:', user);
       toast({
@@ -218,7 +218,7 @@ const Payment = () => {
     });
   };
 
-  // ✅ Loading state while fetching user data
+  // Loading state while fetching user data
   if (authLoading || !isDataLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -237,7 +237,7 @@ const Payment = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // ✅ Show error if user data is invalid/incomplete
+  // Show error if user data is invalid/incomplete
   if (!isUserDataValid()) {
     return (
       <div className="min-h-screen bg-background">
@@ -324,7 +324,7 @@ const Payment = () => {
             <h1 className="text-3xl sm:text-4xl font-bold text-text-primary mb-4">Make a Payment</h1>
             <p className="text-base sm:text-lg text-text-secondary">Select collection member and amount to contribute</p>
             
-            {/* ✅ Show confirmation that data is loaded */}
+            {/* Show confirmation that data is loaded */}
             <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-success-light text-success rounded-full text-xs sm:text-sm font-medium">
               <span className="w-2 h-2 bg-success rounded-full animate-pulse"></span>
               Profile Loaded: {user.sfaId}

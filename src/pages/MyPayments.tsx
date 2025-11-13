@@ -39,7 +39,7 @@ interface PaymentRecord {
     amount: string;
     dateString: string;
     screenshotUrl: string;
-    date: any; // Firestore Timestamp
+    date: any; 
     verified: boolean;
 }
 

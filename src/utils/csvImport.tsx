@@ -75,7 +75,7 @@ export const parseCSVData = (csvContent: string): PaymentRecord[] => {
   
   return lines.slice(1).filter(line => line.trim()).map((line, index) => {
     const values = line.split(',');
-    const record: Record<string, any> = {};
+    const record: Record<string> = {};
     
     headers.forEach((header, i) => {
       let value = values[i]?.trim() || '';
@@ -107,7 +107,7 @@ export const parseCSVData = (csvContent: string): PaymentRecord[] => {
 export const importCSVToFirestore = async (
   csvData: PaymentRecord[],
   batchSize: number = 500
-): Promise<{ success: boolean; imported: number; errors?: any }> => {
+): Promise<{ success: boolean; imported: number; errors }> => {
   try {
     const totalRecords = csvData.length;
     let importedCount = 0;

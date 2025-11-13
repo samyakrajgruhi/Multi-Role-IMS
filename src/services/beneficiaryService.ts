@@ -27,7 +27,7 @@ export interface BeneficiaryRequest {
   description: string;
   verificationDocUrl?: string;
   paySlipUrl?: string;
-  applicationFormUrl?: string;  // ✅ NEW
+  applicationFormUrl?: string; 
   status: 'pending' | 'approved' | 'rejected';
   approvalCount: number;
   totalApprovals: number;
@@ -50,7 +50,7 @@ export interface BeneficiaryApproval {
 export const uploadBeneficiaryDocument = async (
   file: File,
   requestId: string,
-  type: 'verification' | 'payslip' | 'application'  // ✅ UPDATED
+  type: 'verification' | 'payslip' | 'application'  
 ): Promise<string> => {
   const timestamp = Date.now();
   const fileName = `${requestId}_${type}_${timestamp}_${file.name}`;
@@ -62,7 +62,7 @@ export const uploadBeneficiaryDocument = async (
   return downloadURL;
 };
 
-// ✅ UPDATED: Create new beneficiary request
+// Create new beneficiary request
 export const createBeneficiaryRequest = async (
   requestData: Omit<BeneficiaryRequest, 'id' | 'createdAt' | 'updatedAt' | 'approvalCount' | 'totalApprovals' | 'status'>,
   verificationDoc: File,
@@ -98,7 +98,7 @@ export const createBeneficiaryRequest = async (
     await updateDoc(doc(firestore, 'beneficiary_requests', docRef.id), {
       verificationDocUrl: verificationUrl,
       paySlipUrl: paySlipUrl,
-      applicationFormUrl: applicationFormUrl  // ✅ NEW
+      applicationFormUrl: applicationFormUrl  
     });
 
     return docRef.id;

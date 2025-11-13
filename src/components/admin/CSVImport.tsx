@@ -143,10 +143,10 @@ export const importCSVToFirestore = async (
           sfaId: record.sfaId,
           lobby: record.lobby,
           amount: numericAmount,
-          date: date, // JavaScript Date object
-          dateString: record.payDate, // Original string for display
-          month: month, // 0-11
-          year: year, // Full year number
+          date, 
+          dateString: record.payDate, 
+          month, // 0-11
+          year,
           mode: record.paymentMode,
           remarks: record.remarks || '',
           receiver: record.receiver,

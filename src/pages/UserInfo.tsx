@@ -21,7 +21,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-// Add Nominee interface
 interface Nominee {
   name: string;
   relationship: string;
@@ -120,7 +119,6 @@ const UserInfo = () => {
 
   const [editedInfo, setEditedInfo] = useState({ ...userInfo });
 
-  // Fetch complete user data including new fields
   useEffect(() => {
     const fetchCompleteUserData = async () => {
       if (!user?.sfaId) return;
@@ -299,7 +297,6 @@ const UserInfo = () => {
   // Update the handleSaveChanges function
 
   const handleSaveChanges = async () => {
-    // ✅ Validate user data before saving
     if (!user?.sfaId || user.sfaId === 'SFA000') {
       toast({
         title: "Error",
@@ -356,7 +353,7 @@ const UserInfo = () => {
       setUserInfo(editedInfo);
       setIsEditing(false);
 
-      // ✅ Refresh user data in context
+      // Refresh user data in context
 
       await refreshUserData();
 

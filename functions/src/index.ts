@@ -4,17 +4,16 @@ import * as admin from 'firebase-admin';
 // Initialize Firebase Admin
 admin.initializeApp();
 
-// ✅ Define proper types for the request data
 interface UpdateEmailData {
   uid: string;
   newEmail: string;
   oldEmail?: string;
 }
 
-// ✅ Cloud Function to update user email (v2 syntax)
+// Cloud Function to update user email 
 export const updateUserEmail = functions.https.onCall(
     {
-    region: 'asia-southeast2', // ✅ Make sure this is here
+    region: 'asia-southeast2',
     cors: true,
   },
   async (request) => {

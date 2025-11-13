@@ -71,7 +71,7 @@ const BeneficiaryRequest = () => {
     fetchRequests();
   }, [user?.uid,toast]);
 
-  // ✅ UPDATED: Handle file change
+  // Handle file change
   const handleFileChange = (field: 'verificationDoc' | 'paySlip' | 'applicationForm', file: File | null) => {
     if (file && file.size > 5 * 1024 * 1024) {
       toast({
@@ -84,7 +84,7 @@ const BeneficiaryRequest = () => {
     setFormData(prev => ({ ...prev, [field]: file }));
   };
 
-  // ✅ UPDATED: Handle submit
+  // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -124,7 +124,7 @@ const BeneficiaryRequest = () => {
         requestData,
         formData.verificationDoc!,
         formData.paySlip!,
-        formData.applicationForm!  // ✅ NEW
+        formData.applicationForm
       );
 
       toast({
@@ -345,7 +345,7 @@ const BeneficiaryRequest = () => {
                     </div>
                   </div>
 
-                  {/* ✅ NEW: Application Form Upload */}
+                  {/* Application Form Upload */}
                   <div className="space-y-2">
                     <Label htmlFor="applicationForm">
                       Application Form <span className="text-destructive">*</span>
@@ -526,7 +526,7 @@ const BeneficiaryRequest = () => {
                       </p>
                     </a>
                   )}
-                  {/* ✅ NEW: Application Form Link */}
+                  {/* Application Form Link */}
                   {selectedRequest.applicationFormUrl && (
                     <a
                       href={selectedRequest.applicationFormUrl}

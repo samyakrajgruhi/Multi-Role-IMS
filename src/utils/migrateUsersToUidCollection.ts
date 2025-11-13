@@ -50,7 +50,7 @@ export const migrateUsersToUidCollection = async (): Promise<{ success: boolean;
           batch = writeBatch(firestore);
           batchCount = 0;
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error(`Error processing user ${userDoc.id}:`, error);
         errors.push(`Error processing ${userDoc.id}: ${error.message}`);
       }
@@ -68,7 +68,7 @@ export const migrateUsersToUidCollection = async (): Promise<{ success: boolean;
     }
     
     return { success: true, count, errors };
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Migration failed:', error);
     return { success: false, count: 0, errors: [error.message] };
   }

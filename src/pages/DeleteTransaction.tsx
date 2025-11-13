@@ -22,7 +22,6 @@ import {
 import {requireFounder } from '@/hooks/useFounderCheck';
 
 interface TransactionInfo {
-  // TODO: Define the interface based on transaction fields
   id: string;
   transaction_id: string;
   sfaId: string;
@@ -111,7 +110,6 @@ const DeleteTransaction = () => {
     }
   };
 
-  // TODO: Implement handleDelete function
   const handleDeleteTransaction = async () => {
     if (!foundTransaction) return;
 

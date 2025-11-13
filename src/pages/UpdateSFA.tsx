@@ -711,12 +711,12 @@ const UpdateSFA = () => {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                {/* ✅ Disable Cancel button while updating */}
+                {/* Disable Cancel button while updating */}
                 <AlertDialogCancel disabled={isUpdatingEmail}>
                   Cancel
                 </AlertDialogCancel>
                 
-                {/* ✅ Show loading state on Confirm button */}
+                {/* Show loading state on Confirm button */}
                 <AlertDialogAction
                   onClick={handleUpdateEmail}
                   disabled={isUpdatingEmail}

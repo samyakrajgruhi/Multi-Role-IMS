@@ -9,32 +9,6 @@ import {useAuth } from '@/contexts/AuthContext';
 
 const Homepage = () => {
   const { isAuthenticated } = useAuth();
-  const assistedMembers = [
-    {
-      name: "Ravi Kumar",
-      title: "Emergency Medical Support",
-      description: "Received financial assistance for urgent medical treatment, helping him get back on his feet during a critical time.",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face&auto=format"
-    },
-    {
-      name: "Sunita Devi",
-      title: "Educational Support",
-      description: "Got help with her children's school fees and educational expenses, ensuring their bright future continues.",
-      image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face&auto=format"
-    },
-    {
-      name: "Mohan Singh",
-      title: "Housing Emergency",
-      description: "Received support for urgent home repairs after monsoon damage, keeping his family safe and secure.",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format"
-    },
-    {
-      name: "Priya Sharma",
-      title: "Medical Treatment",
-      description: "Financial assistance for specialized medical treatment helped her recover and return to work successfully.",
-      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face&auto=format"
-    }
-  ];
 
   const founders = [
     {

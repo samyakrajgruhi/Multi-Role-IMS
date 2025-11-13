@@ -25,7 +25,7 @@ const PaymentConfirmation = () => {
     const [isLoadingQr, setIsLoadingQr] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // ✅ Validate user data
+    // Validate user data
     const isUserDataValid = useCallback(() => {
         return (
         isDataLoaded &&
@@ -38,7 +38,7 @@ const PaymentConfirmation = () => {
         );
     }, [isDataLoaded, user]);
 
-    // ✅ Redirect if no payment data or invalid user data
+    // Redirect if no payment data or invalid user data
     useEffect(() => {
         if (!paymentData) {
             toast({
@@ -132,7 +132,7 @@ const PaymentConfirmation = () => {
     };
 
     const handleSubmitPayment = async () => {
-        // ✅ CRITICAL: Final validation before submission
+        // CRITICAL: Final validation before submission
         if (!isUserDataValid()) {
             toast({
                 title: "Error",
@@ -159,13 +159,13 @@ const PaymentConfirmation = () => {
             const month = String(currentDate.getMonth() + 1).padStart(2, '0');
             const day = String(currentDate.getDate()).padStart(2, '0');
             
-            // ✅ Generate timestamp for uniqueness (HHmmss format)
+            // Generate timestamp for uniqueness (HHmmss format)
             const hours = String(currentDate.getHours()).padStart(2, '0');
             const minutes = String(currentDate.getMinutes()).padStart(2, '0');
             const seconds = String(currentDate.getSeconds()).padStart(2, '0');
             const timestamp = `${hours}${minutes}${seconds}`;
             
-            // ✅ NEW FORMAT: SFAXXXX_DDMMYYYY_HHmmss
+            // Document ID FORMAT: SFAXXXX_DDMMYYYY_HHmmss
             const docId = `${user.sfaId}_${day}${month}${year}_${timestamp}`;
             
             console.log('📝 Creating transaction with ID:', docId);
@@ -188,7 +188,7 @@ const PaymentConfirmation = () => {
 
             const transactionsRef = doc(collection(firestore, 'transactions'), docId);
 
-            // ✅ Store transaction with validated user data
+            // Store transaction with validated user data
             await setDoc(transactionsRef, {
                 transaction_id: docId,
                 // User info (payer)
@@ -215,7 +215,7 @@ const PaymentConfirmation = () => {
                 month: monthNum,
                 year: year,
                 createdAt: new Date(),
-                timestamp: timestamp, // ✅ Store timestamp separately for reference
+                timestamp,
                 remarks: 'Payment via app',
 
                 // Verification status
@@ -249,7 +249,7 @@ const PaymentConfirmation = () => {
         }
     };
 
-    // ✅ Show warning if user data becomes invalid
+    // warning if user data becomes invalid
     if (!isUserDataValid()) {
         return (
             <div className="min-h-screen bg-background">
@@ -291,7 +291,7 @@ const PaymentConfirmation = () => {
                             Review details and upload payment proof
                         </p>
                         
-                        {/* ✅ Data validation indicator */}
+                        {/* Data validation indicator */}
                         <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-success-light text-success rounded-full text-sm font-medium">
                             <CheckCircle className="w-4 h-4" />
                             Payment Data Verified

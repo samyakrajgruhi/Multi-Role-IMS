@@ -54,7 +54,6 @@ const MakeCollectionMember = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // State for making new CM
   const [sfaId, setSfaId] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [memberInfo, setMemberInfo] = useState<MemberInfo | null>(null);
@@ -62,7 +61,6 @@ const MakeCollectionMember = () => {
   const [qrPreview, setQrPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   
-  // State for CM list
   const [collectionMembers, setCollectionMembers] = useState<MemberInfo[]>([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(true);
   const [selectedMember, setSelectedMember] = useState<MemberInfo | null>(null);
@@ -535,10 +533,9 @@ const MakeCollectionMember = () => {
             </CardContent>
           </Card>
 
-          {/* Current Collection Members List */}
+          {/* Current Collection Members List with Download CM List button*/}
           <Card className="p-6">
             <CardHeader>
-              {/* ✅ UPDATED: Add download button */}
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Current Collection Members</CardTitle>

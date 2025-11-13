@@ -29,6 +29,9 @@ test.html
 .env.local
 .env.*.local
 
+pages/
+TempAdmin.tsx
+
 .firebase/
 firebase-debug.log
 firebase-debug.*.log
