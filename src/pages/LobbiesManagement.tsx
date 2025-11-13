@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { firestore } from '@/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import {requireAdmin} from '@/hooks/useAdminCheck';
+import {requireFounder} from '@/hooks/useFounderCheck';
 
 const LobbiesManagement = () => {
     

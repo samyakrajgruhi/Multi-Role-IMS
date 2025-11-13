@@ -12,10 +12,11 @@ import {
   Select, SelectContent, SelectItem, 
   SelectTrigger, SelectValue 
 } from '@/components/ui/select';
-import { Search, Shield, ShieldCheck, ShieldAlert, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Search, Shield, ShieldCheck, ShieldAlert, AlertCircle, ArrowLeft, Download } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { firestore } from '@/firebase';
+import { exportMembersToCSV } from '@/utils/exportMembers';
 import { collection, getDocs, updateDoc, doc, query, where, getDoc } from 'firebase/firestore';
 import { 
   Dialog,
@@ -162,7 +163,24 @@ const MemberList = () => {
   const handleViewDetails = (member: MemberData) => {
     setSelectedMember(member);
     setShowDetailsDialog(true);
-};
+  };
+
+  const handleDownloadMembers = () => {
+    try {
+      exportMembersToCSV(members);
+      toast({
+        title: "Success",
+        description: `Downloaded ${members.length} member records`,
+      });
+    } catch (error) {
+      console.error("Error downloading members:", error);
+      toast({
+        title: "Error",
+        description: "Failed to download member list",
+        variant: "destructive"
+      });
+    }
+  };
 
   // Handle Admin Toggle
   const handleAdminToggle = async (memberId: string, isCurrentlyAdmin: boolean, sfaId: string, isProtected: boolean) => {
@@ -256,8 +274,20 @@ const MemberList = () => {
 
           <Card className="p-6">
             <CardHeader>
-              <CardTitle>Members ({members.length})</CardTitle>
-              <CardDescription>Search and filter members by role</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Members ({members.length})</CardTitle>
+                  <CardDescription>Search and filter members by role</CardDescription>
+                </div>
+                <Button
+                  onClick={handleDownloadMembers}
+                  disabled={members.length === 0}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download List
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {/* Search and Filter Controls */}

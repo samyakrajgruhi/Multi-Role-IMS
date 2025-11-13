@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TransactionImport from '@/components/admin/TransactionImport';
 import MemberImport from '@/components/admin/MemberImport';
 import {requireAdmin} from '@/hooks/useAdminCheck';
+import {useToast } from '@/hooks/use-toast';
 
 const CSVImportPage = () => {
   const handleAdminAction = async () => {
@@ -16,6 +17,7 @@ const CSVImportPage = () => {
   }
   
   const { user, isAuthenticated, isLoading } = useAuth();
+  const {toast} = useToast();
   const navigate = useNavigate();
   const isAdmin = user?.isAdmin;
 
