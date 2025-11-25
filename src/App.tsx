@@ -21,7 +21,7 @@ const PaymentAmounts = lazy(() => import("./pages/PaymentAmounts"));
 const MakeCollectionMember = lazy(() => import("./pages/MakeCollectionMember"));
 const CSVImportPage = lazy(() => import("./pages/CSVImportPage"));
 const LobbiesManagement = lazy(() => import("./pages/LobbiesManagement"));
-const DeleteUser = lazy(() => import("./pages/DeleteUser"));
+const UserManagement = lazy(() => import("./pages/UserManagement"));
 const BeneficiaryRequest = lazy(() => import("./pages/BeneficiaryRequest"));
 const BeneficiaryReview = lazy(() => import("./pages/BeneficiaryReview"));
 const Announcements = lazy(() => import("./pages/Announcements"));
@@ -97,7 +97,7 @@ const App = () => (
                   <Route path="/admin/lobbies" element={<LobbiesManagement />} />
                   <Route path="/admin/collection-members" element={<MakeCollectionMember />} />
                   <Route path="/admin/csv-import" element={<CSVImportPage />} />
-                  <Route path="/admin/delete-user" element={<DeleteUser />} />
+                  <Route path="/admin/user-management" element={<UserManagement />} />
                   <Route path="/admin/delete-transaction" element={<DeleteTransaction />} />
                   <Route path="/admin/beneficiary-review" element={<BeneficiaryReview />} />
                   <Route path="/my-payments" element={<MyPayments />} />

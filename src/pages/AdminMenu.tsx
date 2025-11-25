@@ -92,10 +92,10 @@ const AdminMenu = () => {
       color: 'text-success'
     },
     {
-      title: 'Disable User',
-      description: 'Remove user accounts from the system (preserves transaction data)',
+      title: 'User Management',
+      description: 'Enable, disable, or permanently delete user accounts',
       icon: UserX,
-      path: '/admin/delete-user',
+      path: '/admin/user-management',
       color: 'text-destructive'
     },
     {

@@ -29,7 +29,6 @@ test.html
 .env.local
 .env.*.local
 
-pages/
 TempAdmin.tsx
 
 .firebase/
