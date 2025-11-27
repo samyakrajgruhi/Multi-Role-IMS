@@ -623,7 +623,7 @@ const Login = () => {
         });
 
         clearFields();
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         toast({
           title: "Success",
@@ -633,6 +633,9 @@ const Login = () => {
         });
 
         console.log("User registered Successfully!!");
+
+        setRegistrationStep('select');
+        setMemberType(null);
         setIsLogin(true);
       }catch (e) {
         console.error('Registration error:', e);

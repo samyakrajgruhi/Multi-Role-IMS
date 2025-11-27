@@ -6,7 +6,7 @@ import {
   onAuthStateChanged, 
   signOut as firebaseSignOut ,
 } from "firebase/auth";
-import { doc, getDocs, collection, query, where  } from "firebase/firestore";
+import { doc, getDocs, getDoc, collection, query, where  } from "firebase/firestore";
 
 
 interface FirestoreUserData {
@@ -28,6 +28,7 @@ interface FirestoreUserData {
 const getUserData = async (userId: string, retries = 3): Promise<FirestoreUserData> => {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
+      // Method 1: Try query by UID
       const userQuery = query(collection(firestore,'users'), where('uid','==',userId));
       const userSnapshot = await getDocs(userQuery);
       
@@ -35,6 +36,23 @@ const getUserData = async (userId: string, retries = 3): Promise<FirestoreUserDa
         const userData = userSnapshot.docs[0].data() as FirestoreUserData;
         console.log('✅ Successfully fetched user data:', userData);
         return userData;
+      }
+
+      // Method 2: If query fails, try users_by_uid collection
+      console.log(`⚠️ Query attempt ${attempt + 1}/${retries}: Trying users_by_uid...`);
+      const uidDocRef = doc(firestore, 'users_by_uid', userId);
+      const uidDoc = await getDoc(uidDocRef);
+      
+      if (uidDoc.exists()) {
+        const uidData = uidDoc.data();
+        // Fetch full user data using SFA ID
+        const userDocRef = doc(firestore, 'users', uidData.sfa_id);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          console.log('✅ Found user via users_by_uid collection');
+          return userDoc.data() as FirestoreUserData;
+        }
       }
       
       console.warn(`⚠️ Attempt ${attempt + 1}/${retries}: No user document found for uid ${userId}`);
@@ -45,15 +63,8 @@ const getUserData = async (userId: string, retries = 3): Promise<FirestoreUserDa
     } catch (error) {
       console.error(`❌ Attempt ${attempt + 1}/${retries} failed:`, error);
       
-      // Wait before retrying for network errors
-      if (error.code === 'unavailable' || error.message?.includes('Failed to fetch')) {
-        console.warn(`Network error detected, retrying...`);
-        if (attempt < retries - 1) {
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-        }
-      } else {
-        // Non-network error, don't retry
-        break;
+      if (attempt < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
       }
     }
   }
@@ -61,7 +72,6 @@ const getUserData = async (userId: string, retries = 3): Promise<FirestoreUserDa
   console.error('❌ Failed to fetch user data after all retries');
   return {};
 };
-
 
 interface UserData {
   uid: string;
