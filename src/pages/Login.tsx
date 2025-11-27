@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLobbies } from '@/hooks/useLobbies';
 import { Link, useNavigate } from "react-router-dom";
-import { User, UserPlus, Eye, ArrowLeft, Plus, Trash2, AlertCircle, CheckCircle } from "lucide-react";
+import { User, UserPlus, Eye, ArrowLeft, Plus, Trash2, AlertCircle, CheckCircle, AlertTriangle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,6 +24,15 @@ import {
   validatePassword,
   getPasswordStrength
 } from '@/utils/validators';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import Rules from "@/components/Rules";
 
 interface Nominee {
   name: string;
@@ -93,6 +102,9 @@ const Login = () => {
 
   const [sfaIdValid, setSfaIdValid] = useState(false);
   const [cmsIdValid, setCmsIdValid] = useState(false);
+
+  // For Rules Dialog
+  const [showRulesDialog, setShowRulesDialog] = useState(false);
 
   useEffect(() => {
     const checkRegistrationStatus = async () => {
@@ -397,9 +409,9 @@ const Login = () => {
     setPasswordValid(false);
     setSfaIdValid(false);
     setCmsIdValid(false);
-    // Reset registration flow
     setRegistrationStep('select');
     setMemberType(null);
+    setShowRulesDialog(false);
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -842,6 +854,48 @@ const Login = () => {
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Registration Type
                 </Button>
+              )}
+
+              {/* Rules Notice - Show for New Members */}
+              {memberType === 'new' && (
+                <div className="mb-6 p-4 bg-warning-light border-2 border-warning rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-warning mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-warning mb-2">
+                        Important: Please Read the Rules Before Registering
+                      </p>
+                      <p className="text-sm text-text-secondary mb-3">
+                        As a new member, it is mandatory to understand the SFA GROUP rules and procedures before completing your registration.
+                      </p>
+                      <Dialog open={showRulesDialog} onOpenChange={setShowRulesDialog}>
+                        <DialogTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="gap-2 border-warning text-warning hover:bg-warning hover:text-white"
+                          >
+                            <FileText className="w-4 h-4" />
+                            Read SFA GROUP Rules
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle className="text-2xl flex items-center gap-2">
+                              <FileText className="w-6 h-6 text-primary" />
+                              SFA GROUP Rules & Procedures
+                            </DialogTitle>
+                            <DialogDescription>
+                              Please read and understand these rules before proceeding with registration
+                            </DialogDescription>
+                          </DialogHeader>
+                          <Rules />
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  </div>
+                </div>
               )}
 
               <form className="space-y-6" onSubmit={handleSubmit}>
