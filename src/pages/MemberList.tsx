@@ -53,6 +53,7 @@ interface MemberData {
     phoneNumber: string;
     sharePercentage: number;
   }>;
+  workingStatusScreenshot?: string;
 }
 
 
@@ -137,7 +138,8 @@ const MemberList = () => {
             presentStatus: data.present_status,
             pfNumber: data.pf_number,
             registrationDate: data.registration_date?.toDate(),
-            nominees: data.nominees || []
+            nominees: data.nominees || [],
+            workingStatusScreenshot: data.working_status_screenshot
           };
         });
         
@@ -542,6 +544,43 @@ const MemberList = () => {
                         <p className="text-sm text-text-primary font-mono">{selectedMember.pfNumber}</p>
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Working Status Screenshot */}
+              {selectedMember.workingStatusScreenshot && (
+                <div>
+                  <h4 className="text-sm font-semibold text-text-primary mb-3 pb-2 border-b border-border">
+                    Working Status Proof
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="p-3 bg-success-light border border-success rounded-lg">
+                      <p className="text-xs text-success font-medium mb-1">
+                        ✓ Working Status Verified
+                      </p>
+                      <p className="text-xs text-text-secondary">
+                        Screenshot uploaded during registration
+                      </p>
+                    </div>
+                    
+                    <div className="border border-border rounded-lg p-4 bg-surface">
+                      <img
+                        src={selectedMember.workingStatusScreenshot}
+                        alt="Working Status Screenshot"
+                        className="w-full h-auto object-contain rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => window.open(selectedMember.workingStatusScreenshot, '_blank')}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full mt-3"
+                        onClick={() => window.open(selectedMember.workingStatusScreenshot, '_blank')}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Full Size
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}

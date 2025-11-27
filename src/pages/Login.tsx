@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLobbies } from '@/hooks/useLobbies';
 import { Link, useNavigate } from "react-router-dom";
-import { User, UserPlus, Eye, ArrowLeft, Plus, Trash2, AlertCircle, CheckCircle, AlertTriangle, FileText } from "lucide-react";
+import { User, UserPlus, Eye, ArrowLeft, Plus, Trash2, AlertCircle, CheckCircle, AlertTriangle, FileText, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { auth, firestore } from "@/firebase";
+import { auth, firestore, storage } from "@/firebase";
+import { ref, uploadBytes, getDownloadURL} from "firebase/storage";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -106,6 +107,10 @@ const Login = () => {
   // For Rules Dialog
   const [showRulesDialog, setShowRulesDialog] = useState(false);
 
+  // Working Status Screenshot for New Members
+  const [workingStatusScreenshot, setWorkingStatusScreenshot] = useState<File | null>(null);
+  const [workingStatusPreview, setWorkingStatusPreview] = useState<string | null>(null);
+
   useEffect(() => {
     const checkRegistrationStatus = async () => {
       try {
@@ -161,7 +166,7 @@ const Login = () => {
     return nominees.reduce((sum, nominee) => sum + (nominee.sharePercentage || 0), 0);
   };
 
-  // ✅ 1. Phone Number Validation
+  // 1. Phone Number Validation
   const handlePhoneChange = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
     const limited = cleaned.slice(0, 10);
@@ -171,14 +176,14 @@ const Login = () => {
     setPhoneValid(validation.isValid);
   };
 
-  // ✅ Emergency Number (same validation)
+  // Emergency Number (same validation)
   const handleEmergencyPhoneChange = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
     const limited = cleaned.slice(0, 10);
     setEmergencyNo(limited);
   };
 
-  // ✅ 2. PF Number Validation
+  // 2. PF Number Validation
   const handlePfNumberChange = (value: string) => {
     // Remove spaces but keep original case, allow alphanumeric (both cases)
     const cleaned = value.replace(/\s/g, '');
@@ -191,7 +196,7 @@ const Login = () => {
     setPfValid(validation.isValid);
   };
 
-  // ✅ 3. Password Validation
+  // 3. Password Validation
   const handlePasswordChange = (value: string) => {
     setRegPassword(value);
 
@@ -269,7 +274,7 @@ const Login = () => {
     return { isValid: true };
   };
 
-  // ✅ Check if form is valid
+  // Check if form is valid
   const isFormValid = () => {
     // Check required fields (SFA ID not required for new members)
     if (!fullName || !regEmail || !lobbyId || !cmsId || !designation ||
@@ -277,7 +282,7 @@ const Login = () => {
       return false;
     }
 
-    // ✅ Check CMS ID format with lobby
+    // Check CMS ID format with lobby
     if (!cmsIdValid || !validateCmsIdFormat(cmsId, lobbyId).isValid) {
       return false;
     }
@@ -287,7 +292,7 @@ const Login = () => {
       if (!sfaId) {
         return false;
       }
-      // ✅ Check SFA ID format for old members
+      // Check SFA ID format for old members
       if (!sfaIdValid) {
         return false;
       }
@@ -318,6 +323,10 @@ const Login = () => {
     );
 
     if (!nomineeValid) {
+      return false;
+    }
+
+    if (memberType === 'new' && !workingStatusScreenshot) {
       return false;
     }
 
@@ -412,7 +421,51 @@ const Login = () => {
     setRegistrationStep('select');
     setMemberType(null);
     setShowRulesDialog(false);
+    setWorkingStatusScreenshot(null);
+    setWorkingStatusPreview(null);
   }
+
+  // Working Status Screenshot Handler
+  const handleWorkingStatusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    
+    if (!file) {
+      setWorkingStatusScreenshot(null);
+      setWorkingStatusPreview(null);
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Invalid File',
+        description: 'Please upload an image file',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: 'File Too Large',
+        description: 'Please upload an image smaller than 5MB',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setWorkingStatusScreenshot(file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setWorkingStatusPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveWorkingStatusScreenshot = () => {
+    setWorkingStatusScreenshot(null);
+    setWorkingStatusPreview(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -423,7 +476,7 @@ const Login = () => {
     }
 
     if (!isLogin) {
-      // ✅ Final validation check
+      // Final validation check
       if (!isFormValid()) {
         toast({
           title: "Form Incomplete",
@@ -433,7 +486,7 @@ const Login = () => {
         return;
       }
 
-      // ✅ Additional format validation for SFA ID (only for old members)
+      // Additional format validation for SFA ID (only for old members)
       if (memberType === 'old') {
         const sfaValidation = validateSfaIdFormat(sfaId);
         if (!sfaValidation.isValid) {
@@ -522,6 +575,18 @@ const Login = () => {
           }
         }
 
+        let workingStatusUrl = '';
+
+        if (memberType === 'new' && workingStatusScreenshot) {
+          // Upload working status screenshot to Firebase Storage
+          const workingStatusRef = ref(
+            storage, 
+            `working_status_screenshots/${finalSfaId}_status.${workingStatusScreenshot.name.split('.').pop()}`
+          );
+          await uploadBytes(workingStatusRef, workingStatusScreenshot);
+          workingStatusUrl = await getDownloadURL(workingStatusRef);
+        }
+
 
         const userData = {
           full_name: fullName,
@@ -540,7 +605,8 @@ const Login = () => {
           present_status: presentStatus,
           pf_number: pfNumber,
           nominees: nominees,
-          registration_date: new Date()
+          registration_date: new Date(),
+          working_status_screenshot: workingStatusUrl || null
         };
 
         await setDoc(doc(firestore, "users", finalSfaId), userData);
@@ -557,24 +623,27 @@ const Login = () => {
         });
 
         clearFields();
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
         toast({
           title: "Success",
-          description: "User registered successfully!"
+          description: memberType === 'new' 
+            ? `Registration successful! Your SFA ID is ${finalSfaId}. Please login now.`
+            : "User registered successfully! Please login now."
         });
 
         console.log("User registered Successfully!!");
         setIsLogin(true);
-      }
-      catch (e) {
+      }catch (e) {
+        console.error('Registration error:', e);
         toast({
           title: "Registration Failed",
           description: e.message || "Please try again with different information.",
           variant: "destructive",
         });
-        setIsLogin(true);
       } finally {
         setIsSubmitting(false);
-      }
+      }       
     } else {
       // Login flow
       setIsSubmitting(true);
@@ -588,7 +657,7 @@ const Login = () => {
         await setPersistence(auth, browserSessionPersistence);
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-        // ✅ Check if user is disabled
+        // Check if user is disabled
         const usersRef = collection(firestore, 'users');
         const q = query(usersRef, where('uid', '==', userCredential.user.uid));
         const querySnapshot = await getDocs(q);
@@ -880,7 +949,7 @@ const Login = () => {
                             Read SFA GROUP Rules
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+                        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
                           <DialogHeader>
                             <DialogTitle className="text-2xl flex items-center gap-2">
                               <FileText className="w-6 h-6 text-primary" />
@@ -890,7 +959,9 @@ const Login = () => {
                               Please read and understand these rules before proceeding with registration
                             </DialogDescription>
                           </DialogHeader>
-                          <Rules />
+                          <div className="overflow-y-auto pr-2">
+                            <Rules />
+                          </div>
                         </DialogContent>
                       </Dialog>
                     </div>
@@ -1036,6 +1107,63 @@ const Login = () => {
                     </Select>
                   </div>
 
+                  {/* Working Status Screenshot - Only for New Members */}
+                  {memberType === 'new' && (
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Working Status Proof <span className="text-red-600">*</span>
+                      </label>
+                      <p className="text-xs text-text-muted mb-3">
+                        Upload a screenshot showing your current working status (not on leave)
+                      </p>
+                      
+                      {!workingStatusPreview ? (
+                        <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-surface transition-colors cursor-pointer">
+                          <input
+                            id="working-status-upload"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleWorkingStatusChange}
+                            className="hidden"
+                          />
+                          <label htmlFor="working-status-upload" className="cursor-pointer flex flex-col items-center">
+                            <Upload className="h-10 w-10 text-text-muted mb-3" />
+                            <p className="text-text-primary font-medium mb-1">
+                              Click to upload screenshot
+                            </p>
+                            <p className="text-xs text-text-muted">
+                              PNG, JPG (Max 5MB)
+                            </p>
+                          </label>
+                        </div>
+                      ) : (
+                        <div className="relative border border-border rounded-lg p-4">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 bg-background hover:bg-destructive hover:text-white"
+                            onClick={handleRemoveWorkingStatusScreenshot}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                          <div className="flex flex-col items-center">
+                            <img
+                              src={workingStatusPreview}
+                              alt="Working Status Screenshot"
+                              className="w-full max-w-md h-auto object-contain border border-border rounded-lg mb-3"
+                            />
+                            <p className="text-sm text-text-secondary">{workingStatusScreenshot?.name}</p>
+                            <div className="mt-2 flex items-center gap-2 text-success">
+                              <CheckCircle className="w-4 h-4" />
+                              <span className="text-xs font-medium">Screenshot uploaded</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Email */}
                   <div>
                     <label className="block text-sm font-medium mb-1" htmlFor="regEmail">
@@ -1118,6 +1246,7 @@ const Login = () => {
                         <span>Valid CMS ID format</span>
                       </div>
                     )}
+
                   </div>
 
                   {/* SFA ID - Conditional based on member type */}
@@ -1288,7 +1417,7 @@ const Login = () => {
                 </div>
               </div>
 
-              {/* ✅ 3. Password - 8 chars, 1 uppercase, 1 symbol */}
+              {/*3. Password - 8 chars, 1 uppercase, 1 symbol */}
               <div>
                 <label className="block text-sm font-medium mb-1" htmlFor="regPassword">
                   Password <span className="text-red-600">*</span>
@@ -1397,6 +1526,9 @@ const Login = () => {
                     )}
                     {!passwordValid && regPassword && (
                       <li className="text-warning">• Password: Must meet all requirements</li>
+                    )}
+                    {memberType === 'new' && !workingStatusScreenshot && (
+                      <li className="text-warning">• Working Status: Screenshot required</li>
                     )}
                   </ul>
                 </div>
