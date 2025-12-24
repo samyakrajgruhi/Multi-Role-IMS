@@ -216,7 +216,7 @@ const Announcements = () => {
             </p>
           </div>
           
-          {user?.isAdmin && (
+          {(user?.isAdmin || user?.isFounder) && (
             <Button 
               onClick={() => setShowForm(!showForm)}
               className="gap-2"
@@ -310,7 +310,7 @@ const Announcements = () => {
                         Created by {announcement.createdBy} on {formatDate(announcement.createdAt)}
                       </CardDescription>
                     </div>
-                    {user?.isAdmin && (
+                    {(user?.isAdmin || user?.isFounder) && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="ghost" size="icon" className="text-warning hover:text-warning hover:bg-warning-light">
