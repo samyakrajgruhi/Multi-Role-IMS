@@ -45,7 +45,7 @@ const Navbar = () => {
           </Link>
 
           {/* Navigation Items */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center ml-4 space-x-8">
             <Link to="/" className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium">
               Home
             </Link>
